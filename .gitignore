@@ -1,0 +1,4 @@
+data/annotations/*
+data/test/*
+data/train/*
+data/val/*
