@@ -4,3 +4,5 @@ data/train/*
 data/val/*
 
 utils/git_colab.ipynb
+
+notebooks/output/*
