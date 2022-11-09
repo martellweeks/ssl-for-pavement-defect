@@ -2,3 +2,5 @@ data/annotations/*
 data/test/*
 data/train/*
 data/val/*
+
+utils/git_colab.ipynb
