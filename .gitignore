@@ -1,8 +1,6 @@
-data/annotations/*
-data/test/*
-data/train/*
-data/val/*
+data/*
 
 utils/git_colab.ipynb
 
 notebooks/output/*
+notebooks/.ipynb_checkpoints
