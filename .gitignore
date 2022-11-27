@@ -1,6 +1,10 @@
 data/*
+!data/predictions/
 
 utils/git_colab.ipynb
 
 notebooks/output/*
 notebooks/.ipynb_checkpoints
+
+models/*
+!models/.gitkeep
