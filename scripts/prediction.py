@@ -19,6 +19,7 @@ parser.add_argument('--image_folder', default='data/predictions/raw', type=str)
 parser.add_argument('--metadata_file', default='data/annotations/metadata.json', type=str)
 parser.add_argument('--weights_file',   default='models/A14_20221119.pth', type=str)
 parser.add_argument('--thresh_score', default=0.5, type=float)
+parser.add_argument('--use_cuda', default=True, type=bool)
 args = parser.parse_args()
 
 
@@ -33,7 +34,7 @@ cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.thresh_score
 cfg.MODEL.MASK_ON = True
 cfg.OUTPUT_DIR = "data/predictions/result"
-cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+cfg.MODEL.DEVICE = "cuda" if (torch.cuda.is_available() & args.use_cuda) else "cpu"
 
 if not os.path.exists(cfg.OUTPUT_DIR):
     os.makedirs(cfg.OUTPUT_DIR)
