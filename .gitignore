@@ -1,5 +1,8 @@
 data/*
 !data/predictions/
+!data/annotations/
+data/annotations/*
+!data/annotations/metadata.json
 
 utils/git_colab.ipynb
 
