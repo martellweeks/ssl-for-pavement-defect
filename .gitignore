@@ -1,5 +1,6 @@
 data/*
-!data/predictions/
+!data/predictions/raw/sample.jpg
+!data/predictions/result/sample_pred.jpg
 !data/annotations/
 data/annotations/*
 !data/annotations/metadata.json
