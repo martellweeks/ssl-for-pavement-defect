@@ -1,3 +1,4 @@
 from src.model import d2_mask
 
-d2_mask.train()
+if __name__ == '__main__':
+    d2_mask.train()
