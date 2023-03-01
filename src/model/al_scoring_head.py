@@ -18,7 +18,8 @@ from detectron2.modeling.matcher import Matcher
 from detectron2.modeling.poolers import ROIPooler
 from detectron2.modeling.proposal_generator.proposal_utils import add_ground_truth_to_proposals
 from detectron2.modeling.sampling import subsample_labels
-from detectron2.modeling.roi_heads import ROIHeads, select_foreground_proposals, select_proposals_with_visible_keypoints
+from detectron2.modeling.roi_heads import ROIHeads, select_foreground_proposals
+from detectron2.modeling.roi_heads.roi_heads import select_proposals_with_visible_keypoints
 from detectron2.modeling.roi_heads.box_head import build_box_head
 from detectron2.modeling.roi_heads.fast_rcnn import FastRCNNOutputLayers
 from detectron2.modeling.roi_heads.keypoint_head import build_keypoint_head
@@ -323,8 +324,8 @@ class ALScoringROIHeads(ROIHeads):
                     )
                     for proposals_per_image, pred_boxes_per_image in zip(proposals, pred_boxes):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
-            score_predictions = self.box_scorer(box_features)
-            losses.update(self.box_scorer.losses(losses.get('loss_box_reg'), score_predictions))
+            score_predictions = self.box_scorer(box_features_after_pool)
+            losses.update(self.box_scorer.losses(score_predictions, losses.get('loss_box_reg')))
             return losses
         else:
             pred_instances, _ = self.box_predictor.inference(predictions, proposals)
@@ -391,7 +392,7 @@ class ALScoringROIHeads(ROIHeads):
             features = {f: features[f] for f in self.keypoint_in_features}
         return self.keypoint_head(features, instances)
     
-    def _forward_box_scoring(self, features: Dict[str, torch.Tensor], proposals: List[Instances], losses: Optional()):
+    def _forward_box_scoring(self, features: Dict[str, torch.Tensor], proposals: List[Instances], losses):
         return 
 
 
@@ -406,15 +407,22 @@ class BoxScorePredictionLayers(nn.Module):
             stride=1,
             padding=1,
         )
+        self.relu = nn.ReLU()
+        self.flatten1 = nn.Flatten()
+        self.flatten2 = nn.Flatten(start_dim=0)
         self.fc1 = nn.Linear(64*input_shape.height*input_shape.width, 1)
+        self.fc2 = nn.Linear(1280, 1)
     
     def forward(self, features):
         res = self.conv1(features)
-        res = nn.functional.relu(res)
-        res = res.view(-1, 64*self.input_shape.height*self.input_shape.width)
+        res = self.relu(res)
+        res = self.flatten1(res)
         res = self.fc1(res)
+        res = self.relu(res)
+        res = self.flatten2(res)
+        res = self.fc2(res)
         return res
 
     def losses(self, predictions, proposals):
-        loss = cross_entropy(predictions, proposals, reduction="mean")
+        loss = nn.functional.mse_loss(predictions, torch.tensor([proposals], device='cuda:0'))
         return {'loss_box_score': loss}

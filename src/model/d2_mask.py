@@ -12,12 +12,11 @@ from detectron2.utils.logger import setup_logger
 from config import paths
 from config.config import cfg as cfg
 from src.model import hooks
+from src.model.al_scoring_head import ALScoringROIHeads
 
 def train():
     logger = setup_logger()
-    streamHandler = logging.StreamHandler()
     fileHandler = logging.FileHandler(f"log_{datetime.now()}")
-    logger.addHandler(streamHandler)
     logger.addHandler(fileHandler)
     logger.setLevel(level=logging.DEBUG)
 
@@ -30,6 +29,8 @@ def train():
     register_coco_instances("train", {}, paths.train_anns_path, paths.train_data_path)
     register_coco_instances("val", {}, paths.val_anns_path, paths.val_data_path)
     register_coco_instances("test", {}, paths.test_anns_path, paths.test_data_path)
+    
+    cfg.MODEL.ROI_HEADS.NAME = 'ALScoringROIHeads'
 
     train_ds = DatasetCatalog.get("train")
     val_ds = DatasetCatalog.get("val")
