@@ -26,7 +26,8 @@ from detectron2.structures import Boxes, ImageList, Instances, pairwise_iou
 from torch import nn
 
 """
-Code brought forward directly from detectron2.models.roi_heads.
+Code brought forward from detectron2.models.roi_heads
+then modified as needed.
 Proper inheritance to be implemented
 """
 
@@ -336,7 +337,7 @@ class ALScoringROIHeads(ROIHeads):
                         proposals, pred_boxes
                     ):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
-            score_predictions = self.box_scorer(box_features_after_pool)
+            score_predictions = self.box_scorer(box_features_after_pool, self.training)
             del box_features_after_pool
             losses.update(
                 self.box_scorer.losses(score_predictions, losses.get("loss_box_reg"))
@@ -344,6 +345,11 @@ class ALScoringROIHeads(ROIHeads):
             return losses
         else:
             pred_instances, _ = self.box_predictor.inference(predictions, proposals)
+            score_predictions = self.box_scorer(box_features_after_pool, self.training)
+            for instance in pred_instances:
+                instance.set(
+                    "box_score_prediction", score_predictions.expand(len(instance))
+                )
             return pred_instances
 
     def _forward_mask(
@@ -386,7 +392,14 @@ class ALScoringROIHeads(ROIHeads):
                 self.mask_scorer.losses(score_predictions, loss.get("loss_mask"))
             )
             return loss
-        return self.mask_head(features, instances)
+        else:
+            instances = self.mask_head(features, instances)
+            score_predictions = self.mask_scorer(features)
+            for instance in instances:
+                instance.set(
+                    "mask_score_prediction", score_predictions.expand(len(instance))
+                )
+            return instances
 
     def _forward_keypoint(
         self, features: Dict[str, torch.Tensor], instances: List[Instances]
@@ -441,7 +454,7 @@ class BoxScorePredictionLayers(nn.Module):
         self.fc1 = nn.Linear(64 * input_shape.height * input_shape.width, 1)
         self.fc2 = nn.Linear(1280, 1)
 
-    def forward(self, features):
+    def forward(self, features, training: bool = True):
         res = self.conv1(features)
         res = self.relu(res)
         res = self.flatten1(res)
@@ -458,6 +471,9 @@ class BoxScorePredictionLayers(nn.Module):
             predictions, torch.tensor([proposals], device="cuda:0")
         )
         return {"loss_box_score": loss}
+
+    def predict(self, features):
+        return self.forward(features)
 
 
 class MaskScorePredictionLayers(nn.Module):

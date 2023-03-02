@@ -1,13 +1,19 @@
+import glob
 import logging
 import os
 from datetime import datetime
 
+import cv2
 import detectron2
+import pandas as pd
 import torch
 from detectron2.checkpoint import DetectionCheckpointer
-from detectron2.data import DatasetCatalog, MetadataCatalog
+from detectron2.data import DatasetCatalog, DatasetMapper, MetadataCatalog
 from detectron2.data.datasets import register_coco_instances
+from detectron2.engine import DefaultPredictor
+from detectron2.modeling import build_model
 from detectron2.utils.logger import setup_logger
+from tqdm import tqdm
 
 from config import paths
 from config.config import cfg as cfg
@@ -15,7 +21,7 @@ from src.model import hooks
 from src.model.al_scoring_head import ALScoringROIHeads
 
 
-def train():
+def startup():
     logger = setup_logger()
     fileHandler = logging.FileHandler(f"log_{datetime.now()}")
     logger.addHandler(fileHandler)
@@ -31,11 +37,13 @@ def train():
     register_coco_instances("val", {}, paths.val_anns_path, paths.val_data_path)
     register_coco_instances("test", {}, paths.test_anns_path, paths.test_data_path)
 
-    cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
+    return logger
 
-    train_ds = DatasetCatalog.get("train")
-    val_ds = DatasetCatalog.get("val")
-    metadata = MetadataCatalog.get("train")
+
+def train():
+    logger = startup()
+
+    cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
@@ -48,3 +56,42 @@ def train():
     checkpointer = DetectionCheckpointer(trainer.model, save_dir=cfg.OUTPUT_DIR)
     checkpointer.save(paths.output_model_filename)
     logger.info("Final model saved")
+
+
+def predict():
+    logger = startup()
+
+    test_ds = DatasetCatalog.get("test")
+
+    cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
+    cfg.MODEL.WEIGHTS = "./models/20230302_pvmt_al_allcat_2000it.pth"
+
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+    predictor = DefaultPredictor(cfg)
+
+    score_predictions = list()
+    prediction_imgs = glob.glob(os.path.join("data/test/*"))
+    pred_output_dir = cfg.OUTPUT_DIR
+    for d in tqdm(prediction_imgs, desc="Running prediction on images"):
+        im = cv2.imread(d)
+        predictions = predictor(im)
+
+        score_predictions.append(
+            [
+                d,
+                predictions["instances"].box_score_prediction[0].item()
+                if len(predictions["instances"].box_score_prediction) != 0
+                else "NA",
+                predictions["instances"].mask_score_prediction[0].item()
+                if len(predictions["instances"].mask_score_prediction) != 0
+                else "NA",
+            ]
+        )
+
+    predictionsDF = pd.DataFrame(
+        data=score_predictions, columns=["img", "box loss", "mask loss"]
+    )
+    predictionsDF.to_csv(os.path.join(cfg.OUTPUT_DIR, "loss_predictions.csv"))
+
+    logger.info(score_predictions)

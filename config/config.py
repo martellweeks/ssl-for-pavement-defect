@@ -32,6 +32,7 @@ cfg.SOLVER.GAMMA = 0.2  # Decay to gamma times previous lr
 cfg.SOLVER.CHECKPOINT_PERIOD = 1000  # Save checkpoint every 1000 iterations
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
 cfg.MODEL.MASK_ON = True  # Mask
 cfg.OUTPUT_DIR = paths.output_path
 cfg.TEST.EVAL_PERIOD = 2000
