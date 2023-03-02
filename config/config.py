@@ -34,5 +34,5 @@ cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
 cfg.MODEL.MASK_ON = True  # Mask
 cfg.OUTPUT_DIR = paths.output_path
-cfg.TEST.EVAL_PERIOD = 500
+cfg.TEST.EVAL_PERIOD = 2000
 cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

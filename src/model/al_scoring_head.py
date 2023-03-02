@@ -202,6 +202,7 @@ class ALScoringROIHeads(ROIHeads):
         else:
             shape = {f: input_shape[f] for f in in_features}
         ret["mask_head"] = build_mask_head(cfg, shape)
+        ret["mask_scorer"] = MaskScorePredictionLayers(cfg, input_shape=shape)
         return ret
 
     @classmethod
@@ -447,6 +448,8 @@ class BoxScorePredictionLayers(nn.Module):
         res = self.fc1(res)
         res = self.relu(res)
         res = self.flatten2(res)
+        if res.shape[0] != 1280:
+            res = nn.functional.pad(res, pad=(0, 1280 - res.shape[0]))
         res = self.fc2(res)
         return res
 
@@ -472,7 +475,7 @@ class MaskScorePredictionLayers(nn.Module):
         self.flatten1 = nn.Flatten()
         self.flatten2 = nn.Flatten(start_dim=0)
         self.fc1 = nn.Linear(64 * input_shape.height * input_shape.width, 1)
-        self.fc2 = nn.Linear(1280, 1)
+        self.fc2 = nn.Linear(128, 1)
 
     def forward(self, features):
         res = self.conv1(features)
@@ -481,6 +484,8 @@ class MaskScorePredictionLayers(nn.Module):
         res = self.fc1(res)
         res = self.relu(res)
         res = self.flatten2(res)
+        if res.shape[0] != 128:
+            res = nn.functional.pad(res, pad=(0, 128 - res.shape[0]))
         res = self.fc2(res)
         return res
 
@@ -488,4 +493,4 @@ class MaskScorePredictionLayers(nn.Module):
         loss = nn.functional.mse_loss(
             predictions, torch.tensor([proposals], device="cuda:0")
         )
-        return {"loss_box_score": loss}
+        return {"loss_mask_score": loss}
