@@ -1,37 +1,34 @@
-import numpy as np
-import os
 import inspect
+import os
 from typing import Dict, List, Optional, Tuple
 
-import torch, detectron2
-
-from torch import nn
-
+import detectron2
+import torch
 from detectron2.config import configurable
-from detectron2.layers import Conv2d, ConvTranspose2d, ShapeSpec, cat, get_norm, cross_entropy
-from detectron2.structures import Boxes, ImageList, Instances, pairwise_iou
-from detectron2.utils.events import get_event_storage
-from detectron2.utils.registry import Registry
-
-from detectron2.modeling.backbone.resnet import BottleneckBlock, ResNet
-from detectron2.modeling.matcher import Matcher
+from detectron2.layers import ShapeSpec
 from detectron2.modeling.poolers import ROIPooler
-from detectron2.modeling.proposal_generator.proposal_utils import add_ground_truth_to_proposals
-from detectron2.modeling.sampling import subsample_labels
-from detectron2.modeling.roi_heads import ROIHeads, select_foreground_proposals
-from detectron2.modeling.roi_heads.roi_heads import select_proposals_with_visible_keypoints
+from detectron2.modeling.proposal_generator.proposal_utils import (
+    add_ground_truth_to_proposals,
+)
+from detectron2.modeling.roi_heads import (
+    ROI_HEADS_REGISTRY,
+    ROIHeads,
+    select_foreground_proposals,
+)
 from detectron2.modeling.roi_heads.box_head import build_box_head
 from detectron2.modeling.roi_heads.fast_rcnn import FastRCNNOutputLayers
 from detectron2.modeling.roi_heads.keypoint_head import build_keypoint_head
 from detectron2.modeling.roi_heads.mask_head import build_mask_head
-
-from detectron2.modeling import ROI_HEADS_REGISTRY
+from detectron2.modeling.roi_heads.roi_heads import (
+    select_proposals_with_visible_keypoints,
+)
+from detectron2.structures import Boxes, ImageList, Instances, pairwise_iou
 from torch import nn
 
-'''
+"""
 Code brought forward directly from detectron2.models.roi_heads.
 Proper inheritance to be implemented
-'''
+"""
 
 
 @ROI_HEADS_REGISTRY.register()
@@ -153,16 +150,24 @@ class ALScoringROIHeads(ROIHeads):
         # They are used together so the "box predictor" layers should be part of the "box head".
         # New subclasses of ROIHeads do not need "box predictor"s.
         box_head = build_box_head(
-            cfg, ShapeSpec(channels=in_channels, height=pooler_resolution, width=pooler_resolution)
+            cfg,
+            ShapeSpec(
+                channels=in_channels, height=pooler_resolution, width=pooler_resolution
+            ),
         )
         box_predictor = FastRCNNOutputLayers(cfg, box_head.output_shape)
-        box_scorer = BoxScorePredictionLayers(cfg, ShapeSpec(channels=in_channels, height=pooler_resolution, width=pooler_resolution))
+        box_scorer = BoxScorePredictionLayers(
+            cfg,
+            ShapeSpec(
+                channels=in_channels, height=pooler_resolution, width=pooler_resolution
+            ),
+        )
         return {
             "box_in_features": in_features,
             "box_pooler": box_pooler,
             "box_head": box_head,
             "box_predictor": box_predictor,
-            "box_scorer": box_scorer
+            "box_scorer": box_scorer,
         }
 
     @classmethod
@@ -291,7 +296,9 @@ class ALScoringROIHeads(ROIHeads):
         instances = self._forward_keypoint(features, instances)
         return instances
 
-    def _forward_box(self, features: Dict[str, torch.Tensor], proposals: List[Instances]):
+    def _forward_box(
+        self, features: Dict[str, torch.Tensor], proposals: List[Instances]
+    ):
         """
         Forward logic of the box prediction branch. If `self.train_on_pred_boxes is True`,
             the function puts predicted boxes in the `proposal_boxes` field of `proposals` argument.
@@ -309,7 +316,9 @@ class ALScoringROIHeads(ROIHeads):
             In inference, a list of `Instances`, the predicted instances.
         """
         features = [features[f] for f in self.box_in_features]
-        box_features_after_pool = self.box_pooler(features, [x.proposal_boxes for x in proposals])
+        box_features_after_pool = self.box_pooler(
+            features, [x.proposal_boxes for x in proposals]
+        )
         box_features = self.box_head(box_features_after_pool)
         predictions = self.box_predictor(box_features)
         del box_features
@@ -322,16 +331,23 @@ class ALScoringROIHeads(ROIHeads):
                     pred_boxes = self.box_predictor.predict_boxes_for_gt_classes(
                         predictions, proposals
                     )
-                    for proposals_per_image, pred_boxes_per_image in zip(proposals, pred_boxes):
+                    for proposals_per_image, pred_boxes_per_image in zip(
+                        proposals, pred_boxes
+                    ):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
             score_predictions = self.box_scorer(box_features_after_pool)
-            losses.update(self.box_scorer.losses(score_predictions, losses.get('loss_box_reg')))
+            del box_features_after_pool
+            losses.update(
+                self.box_scorer.losses(score_predictions, losses.get("loss_box_reg"))
+            )
             return losses
         else:
             pred_instances, _ = self.box_predictor.inference(predictions, proposals)
             return pred_instances
 
-    def _forward_mask(self, features: Dict[str, torch.Tensor], instances: List[Instances]):
+    def _forward_mask(
+        self, features: Dict[str, torch.Tensor], instances: List[Instances]
+    ):
         """
         Forward logic of the mask prediction branch.
 
@@ -355,13 +371,25 @@ class ALScoringROIHeads(ROIHeads):
 
         if self.mask_pooler is not None:
             features = [features[f] for f in self.mask_in_features]
-            boxes = [x.proposal_boxes if self.training else x.pred_boxes for x in instances]
+            boxes = [
+                x.proposal_boxes if self.training else x.pred_boxes for x in instances
+            ]
             features = self.mask_pooler(features, boxes)
         else:
             features = {f: features[f] for f in self.mask_in_features}
+
+        if self.training:
+            loss = self.mask_head(features, instances)
+            score_predictions = self.mask_scorer(features)
+            loss.update(
+                self.mask_scorer.losses(score_predictions, loss.get("loss_mask"))
+            )
+            return loss
         return self.mask_head(features, instances)
 
-    def _forward_keypoint(self, features: Dict[str, torch.Tensor], instances: List[Instances]):
+    def _forward_keypoint(
+        self, features: Dict[str, torch.Tensor], instances: List[Instances]
+    ):
         """
         Forward logic of the keypoint prediction branch.
 
@@ -386,14 +414,13 @@ class ALScoringROIHeads(ROIHeads):
 
         if self.keypoint_pooler is not None:
             features = [features[f] for f in self.keypoint_in_features]
-            boxes = [x.proposal_boxes if self.training else x.pred_boxes for x in instances]
+            boxes = [
+                x.proposal_boxes if self.training else x.pred_boxes for x in instances
+            ]
             features = self.keypoint_pooler(features, boxes)
         else:
             features = {f: features[f] for f in self.keypoint_in_features}
         return self.keypoint_head(features, instances)
-    
-    def _forward_box_scoring(self, features: Dict[str, torch.Tensor], proposals: List[Instances], losses):
-        return 
 
 
 class BoxScorePredictionLayers(nn.Module):
@@ -410,9 +437,9 @@ class BoxScorePredictionLayers(nn.Module):
         self.relu = nn.ReLU()
         self.flatten1 = nn.Flatten()
         self.flatten2 = nn.Flatten(start_dim=0)
-        self.fc1 = nn.Linear(64*input_shape.height*input_shape.width, 1)
+        self.fc1 = nn.Linear(64 * input_shape.height * input_shape.width, 1)
         self.fc2 = nn.Linear(1280, 1)
-    
+
     def forward(self, features):
         res = self.conv1(features)
         res = self.relu(res)
@@ -424,5 +451,41 @@ class BoxScorePredictionLayers(nn.Module):
         return res
 
     def losses(self, predictions, proposals):
-        loss = nn.functional.mse_loss(predictions, torch.tensor([proposals], device='cuda:0'))
-        return {'loss_box_score': loss}
+        loss = nn.functional.mse_loss(
+            predictions, torch.tensor([proposals], device="cuda:0")
+        )
+        return {"loss_box_score": loss}
+
+
+class MaskScorePredictionLayers(nn.Module):
+    def __init__(self, cfg, input_shape: ShapeSpec, **kwargs):
+        super().__init__(**kwargs)
+        self.input_shape = input_shape
+        self.conv1 = nn.Conv2d(
+            input_shape.channels,
+            64,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.relu = nn.ReLU()
+        self.flatten1 = nn.Flatten()
+        self.flatten2 = nn.Flatten(start_dim=0)
+        self.fc1 = nn.Linear(64 * input_shape.height * input_shape.width, 1)
+        self.fc2 = nn.Linear(1280, 1)
+
+    def forward(self, features):
+        res = self.conv1(features)
+        res = self.relu(res)
+        res = self.flatten1(res)
+        res = self.fc1(res)
+        res = self.relu(res)
+        res = self.flatten2(res)
+        res = self.fc2(res)
+        return res
+
+    def losses(self, predictions, proposals):
+        loss = nn.functional.mse_loss(
+            predictions, torch.tensor([proposals], device="cuda:0")
+        )
+        return {"loss_box_score": loss}
