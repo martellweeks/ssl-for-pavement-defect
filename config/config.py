@@ -20,20 +20,20 @@ cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(
 )  # Model weights
 cfg.SOLVER.IMS_PER_BATCH = 5  # Images per batch
 cfg.SOLVER.BASE_LR = 0.001  # Base learning rate
-cfg.SOLVER.MAX_ITER = 10000  # Max iteration
+cfg.SOLVER.MAX_ITER = 3000  # Max iteration
 cfg.SOLVER.STEPS = (
+    500,
+    1000,
+    1500,
     2000,
-    3000,
-    4000,
-    5000,
 )  # Steps on decaying lr
 cfg.SOLVER.NUM_DECAYS = 4  # Total lr decay
 cfg.SOLVER.GAMMA = 0.2  # Decay to gamma times previous lr
-cfg.SOLVER.CHECKPOINT_PERIOD = 1000  # Save checkpoint every 1000 iterations
+cfg.SOLVER.CHECKPOINT_PERIOD = 100  # Save checkpoint every 1000 iterations
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
 cfg.MODEL.MASK_ON = True  # Mask
 cfg.OUTPUT_DIR = paths.output_path
-cfg.TEST.EVAL_PERIOD = 2000
+cfg.TEST.EVAL_PERIOD = 100
 cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
