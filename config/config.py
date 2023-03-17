@@ -18,15 +18,16 @@ cfg.DATALOADER.NUM_WORKERS = 2  # Dataloader workers
 cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(
     "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
 )  # Model weights
-cfg.SOLVER.IMS_PER_BATCH = 5  # Images per batch
-cfg.SOLVER.BASE_LR = 0.001  # Base learning rate
+cfg.SOLVER.IMS_PER_BATCH = 1  # Images per batch
+cfg.SOLVER.BASE_LR = 0.0005  # Base learning rate
 cfg.SOLVER.MAX_ITER = 3000  # Max iteration
 cfg.SOLVER.STEPS = (
     500,
-    1000,
-    1500,
-    2000,
+    600,
+    700,
+    800,
 )  # Steps on decaying lr
+cfg.SOLVER.WARMUP_ITERS = 500
 cfg.SOLVER.NUM_DECAYS = 4  # Total lr decay
 cfg.SOLVER.GAMMA = 0.2  # Decay to gamma times previous lr
 cfg.SOLVER.CHECKPOINT_PERIOD = 100  # Save checkpoint every 1000 iterations
@@ -35,5 +36,5 @@ cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
 cfg.MODEL.MASK_ON = True  # Mask
 cfg.OUTPUT_DIR = paths.output_path
-cfg.TEST.EVAL_PERIOD = 100
+cfg.TEST.EVAL_PERIOD = 1000
 cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

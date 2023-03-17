@@ -1,3 +1,4 @@
+import ast
 import glob
 import logging
 import os
@@ -204,7 +205,9 @@ def freeze_model_parts(model):
             freeze_model_parts(component)
 
 
-def predict(model_weights: str, regist_instances: bool = True, output_path: str = None):
+def predict_scores(
+    model_weights: str, regist_instances: bool = True, output_path: str = None
+):
     logger = startup(regist_instances=regist_instances)
 
     test_ds = DatasetCatalog.get("test")
@@ -217,7 +220,7 @@ def predict(model_weights: str, regist_instances: bool = True, output_path: str 
         pred_output_dir = output_path
     else:
         pred_output_dir = cfg.OUTPUT_DIR
-    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+    os.makedirs(pred_output_dir, exist_ok=True)
 
     predictor = DefaultPredictor(cfg)
 
@@ -243,10 +246,13 @@ def predict(model_weights: str, regist_instances: bool = True, output_path: str 
                 if len(predictions["instances"].scores) != 0
                 else "NA",
                 len(predictions["instances"].scores),
+                predictions["instances"].pred_classes.tolist()
+                if type(predictions["instances"].pred_classes.tolist()) == list
+                else ast.literal_eval(predictions["instances"].pred_classes.tolist()),
             ]
         )
 
-    predictionsDF = pd.DataFrame(
+    predictions_df = pd.DataFrame(
         data=score_predictions,
         columns=[
             "img",
@@ -255,11 +261,11 @@ def predict(model_weights: str, regist_instances: bool = True, output_path: str 
             "class avg score",
             "class min score",
             "no of predictions",
+            "categories",
         ],
+        dtype="object",
     )
-    predictionsDF.to_csv(os.path.join(pred_output_dir, "loss_predictions.csv"))
-
-    logger.info(score_predictions)
+    predictions_df.to_csv(os.path.join(pred_output_dir, "loss_predictions.csv"))
 
 
 def label_predictions_on_images(
@@ -272,7 +278,7 @@ def label_predictions_on_images(
     metadata = MetadataCatalog.get("metadata")
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
-    cfg.MODEL.WEIGHTS = "./output/0310_score/model_final.pth"
+    cfg.MODEL.WEIGHTS = "./output/0317_score_2/model_0001999.pth"
 
     os.makedirs(output_path, exist_ok=True)
 
