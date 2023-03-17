@@ -314,7 +314,7 @@ def get_coco_eval_results(
     test_ds = DatasetCatalog.get("test")
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
-    cfg.MODEL.WEIGHTS = "./output/0317_score_2/model_0001999.pth"
+    cfg.MODEL.WEIGHTS = model_weights
     cfg.DATASETS.TEST = ("test",)
 
     os.makedirs(output_path, exist_ok=True)
