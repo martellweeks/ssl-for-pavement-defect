@@ -10,23 +10,29 @@ if __name__ == "__main__":
     #     regist_instances=True,
     # )
 
-    d2_mask.predict_scores(
+    # d2_mask.predict_scores(
+    #     model_weights="./output/0317_score_2/model_0001999.pth",
+    #     output_path="./output/0317_preds",
+    #     regist_instances=True,
+    # )
+
+    # al_scoring.al_score_calculation(
+    #     file_path="./output/0317_preds/loss_predictions.csv",
+    #     output_path="./output/0317_preds",
+    # )
+
+    # image_list = al_scoring.get_top_n_images(
+    #     score_file_path="./output/0317_preds/al_score.csv", no_img=20
+    # )
+
+    # d2_mask.label_predictions_on_images(
+    #     image_list=image_list,
+    #     regist_instances=False,
+    #     output_path="./output/0317_preds",
+    # )
+
+    d2_mask.get_coco_eval_results(
         model_weights="./output/0317_score_2/model_0001999.pth",
-        output_path="./output/0317_preds",
         regist_instances=True,
-    )
-
-    al_scoring.al_score_calculation(
-        file_path="./output/0317_preds/loss_predictions.csv",
-        output_path="./output/0317_preds",
-    )
-
-    image_list = al_scoring.get_top_n_images(
-        score_file_path="./output/0317_preds/al_score.csv", no_img=20
-    )
-
-    d2_mask.label_predictions_on_images(
-        image_list=image_list,
-        regist_instances=False,
-        output_path="./output/0317_preds",
+        output_path="./output/0317_evals",
     )

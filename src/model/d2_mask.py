@@ -1,5 +1,6 @@
 import ast
 import glob
+import json
 import logging
 import os
 from datetime import datetime
@@ -10,9 +11,10 @@ import detectron2
 import pandas as pd
 import torch
 from detectron2.checkpoint import DetectionCheckpointer
-from detectron2.data import DatasetCatalog, DatasetMapper, MetadataCatalog
+from detectron2.data import DatasetCatalog, MetadataCatalog, build_detection_test_loader
 from detectron2.data.datasets import load_coco_json, register_coco_instances
 from detectron2.engine import DefaultPredictor
+from detectron2.evaluation import COCOEvaluator, inference_on_dataset
 from detectron2.modeling import build_model
 from detectron2.utils.logger import setup_logger
 from detectron2.utils.visualizer import Visualizer
@@ -302,3 +304,29 @@ def label_predictions_on_images(
             ),
             cv2.cvtColor(out_pred.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB),
         )
+
+
+def get_coco_eval_results(
+    model_weights: str, regist_instances: bool = True, output_path: str = "./output/"
+):
+    logger = startup(regist_instances=regist_instances)
+
+    test_ds = DatasetCatalog.get("test")
+
+    cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
+    cfg.MODEL.WEIGHTS = "./output/0317_score_2/model_0001999.pth"
+    cfg.DATASETS.TEST = ("test",)
+
+    os.makedirs(output_path, exist_ok=True)
+
+    predictor = DefaultPredictor(cfg)
+
+    evaluator = COCOEvaluator("test", cfg, False, output_dir=output_path)
+    val_loader = build_detection_test_loader(cfg, "test")
+
+    logger.info("Running COCO evaluation on test dataset with current model")
+
+    with open(os.path.join(output_path, "COCO_metrics_evaluation.json"), "w") as f:
+        json.dump(inference_on_dataset(predictor.model, val_loader, evaluator), f)
+
+    logger.info("File saved")
