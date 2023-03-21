@@ -70,7 +70,9 @@ def train(output_folder: str = None):
     logger.info("Final model saved")
 
 
-def train_model_only(output_folder: str = None, regist_instances: bool = True):
+def train_model_only(
+    output_folder: str = None, model_weights: str = None, regist_instances: bool = True
+):
     logger = startup(regist_instances=regist_instances)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
@@ -79,6 +81,9 @@ def train_model_only(output_folder: str = None, regist_instances: bool = True):
         cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, output_folder)
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+    if model_weights is not None:
+        cfg.MODEL.WEIGHTS = model_weights
 
     trainer = hooks.MyTrainer(cfg)
     trainer.resume_or_load(resume=False)
