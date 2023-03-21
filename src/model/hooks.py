@@ -13,8 +13,6 @@ from detectron2.engine.hooks import HookBase
 from detectron2.evaluation import COCOEvaluator
 from detectron2.utils.logger import log_every_n_seconds
 
-from config.config import cfg
-
 
 class LossEvalHook(HookBase):
     def __init__(self, eval_period, model, data_loader):
@@ -92,7 +90,7 @@ class MyTrainer(DefaultTrainer):
         hooks.insert(
             -1,
             LossEvalHook(
-                cfg.TEST.EVAL_PERIOD,
+                self.cfg.TEST.EVAL_PERIOD,
                 self.model,
                 build_detection_test_loader(
                     self.cfg, self.cfg.DATASETS.TEST[0], DatasetMapper(self.cfg, True)

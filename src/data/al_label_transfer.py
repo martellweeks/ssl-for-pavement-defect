@@ -10,10 +10,10 @@ from pycocotools.coco import COCO
 from config import paths
 
 
-def add_labels_to_train(
+def move_labels_to_train(
     image_list: list,
     output_path: str,
-    output_file_tag: str,
+    output_file_tag: str = None,
     train_anns_file: str = None,
     test_anns_file: str = None,
 ):
@@ -41,18 +41,28 @@ def add_labels_to_train(
         if img["file_name"] in image_list:
             image_id_list.append(img["id"])
             new_images.append(img)
+            test_json["images"].remove(img)
 
     for label in test_json["annotations"]:
         if label["image_id"] in image_id_list:
             new_annotations.append(label)
+            test_json["annotations"].remove(label)
 
     train_json["images"].extend(new_images)
     train_json["annotations"].extend(new_annotations)
 
-    with open(
-        os.path.join(output_path, f"new_train_annotations_{output_file_tag}.json"), "w"
-    ) as f:
-        json.dump(train_json, f)
+    os.makedirs(output_path, exist_ok=True)
+
+    if output_file_tag is not None:
+        with open(os.path.join(output_path, f"train_{output_file_tag}.json"), "w") as f:
+            json.dump(train_json, f)
+        with open(os.path.join(output_path, f"test_{output_file_tag}.json"), "w") as f:
+            json.dump(test_json, f)
+    else:
+        with open(os.path.join(output_path, "train.json"), "w") as f:
+            json.dump(train_json, f)
+        with open(os.path.join(output_path, "test.json"), "w") as f:
+            json.dump(test_json, f)
 
 
 def get_random_n_images(test_anns_file: str = None, no_img: int = 10):
@@ -65,6 +75,6 @@ def get_random_n_images(test_anns_file: str = None, no_img: int = 10):
     rand_idx = random.sample(range(len(test_json["images"])), no_img)
 
     for idx in rand_idx:
-        image_list.append("output/test/" + test_json["images"][idx]["file_name"])
+        image_list.append(test_json["images"][idx]["file_name"])
 
     return image_list

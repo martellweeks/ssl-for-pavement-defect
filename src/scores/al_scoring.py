@@ -22,7 +22,7 @@ def get_per_category_abundance():
     return cat_abundance
 
 
-def al_score_calculation(file_path: str, output_path: str = "./output/"):
+def calculate_al_score(file_path: str, output_path: str = "./output/"):
     data = pd.read_csv(file_path)
 
     cat_abundance = get_per_category_abundance()

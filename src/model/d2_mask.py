@@ -11,6 +11,7 @@ import detectron2
 import pandas as pd
 import torch
 from detectron2.checkpoint import DetectionCheckpointer
+from detectron2.config import CfgNode
 from detectron2.data import DatasetCatalog, MetadataCatalog, build_detection_test_loader
 from detectron2.data.datasets import load_coco_json, register_coco_instances
 from detectron2.engine import DefaultPredictor
@@ -20,17 +21,13 @@ from detectron2.utils.logger import setup_logger
 from detectron2.utils.visualizer import Visualizer
 from tqdm import tqdm
 
-from config import paths
-from config.config import cfg as cfg
+from config import config, paths
 from src.model import hooks
 from src.model.al_scoring_head import ALScoringROIHeads
 
 
-def startup(regist_instances: bool = True):
-    logger = setup_logger()
-    fileHandler = logging.FileHandler(f"log_{datetime.now()}")
-    logger.addHandler(fileHandler)
-    logger.setLevel(level=logging.DEBUG)
+def startup(regist_instances: bool = True, cfg: CfgNode = None):
+    logger = setup_logger(output=f"log_{datetime.now()}.log")
 
     TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
     CUDA_VERSION = torch.__version__.split("+")[-1]
@@ -39,17 +36,22 @@ def startup(regist_instances: bool = True):
     logger.info(f"detectron2: {detectron2.__version__}")
 
     if regist_instances:
-        register_coco_instances(
-            "train", {}, paths.train_anns_path, paths.train_data_path
-        )
-        register_coco_instances("val", {}, paths.val_anns_path, paths.val_data_path)
-        register_coco_instances("test", {}, paths.test_anns_path, paths.test_data_path)
+        register_coco_instances("train", {}, paths.train_anns_path, paths.raw_data_path)
+        register_coco_instances("val", {}, paths.val_anns_path, paths.raw_data_path)
+        register_coco_instances("test", {}, paths.test_anns_path, paths.raw_data_path)
 
-    return logger
+    if cfg is None:
+        cfg = config.get_default_cfg()
+
+    return logger, cfg
 
 
-def train(output_folder: str = None):
-    logger = startup()
+def register_new_coco_instance(annotation_path: str, data_path: str, tag: str):
+    return register_coco_instances(tag, annotation_path, data_path)
+
+
+def train(output_folder: str = None, cfg: CfgNode = None):
+    logger, cfg = startup(cfg=cfg)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
 
@@ -71,9 +73,12 @@ def train(output_folder: str = None):
 
 
 def train_model_only(
-    output_folder: str = None, model_weights: str = None, regist_instances: bool = True
+    output_folder: str = None,
+    model_weights: str = None,
+    regist_instances: bool = True,
+    cfg: CfgNode = None,
 ):
-    logger = startup(regist_instances=regist_instances)
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
 
@@ -107,15 +112,20 @@ def train_model_only(
     trainer.train()
 
     logger.info("Training completed")
-    checkpointer = DetectionCheckpointer(trainer.model, save_dir=cfg.OUTPUT_DIR)
+    if os.path.exists(paths.output_model_full_path):
+        os.remove(paths.output_model_full_path)
+    checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
     checkpointer.save(paths.output_model_filename)
     logger.info("Final model saved")
 
 
 def train_scores_only(
-    output_folder: str = None, model_weights: str = None, regist_instances: bool = True
+    output_folder: str = None,
+    model_weights: str = None,
+    regist_instances: bool = True,
+    cfg: CfgNode = None,
 ):
-    logger = startup(regist_instances=regist_instances)
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
 
@@ -198,24 +208,20 @@ def train_scores_only(
     trainer.train()
 
     logger.info("Training completed")
-    checkpointer = DetectionCheckpointer(trainer.model, save_dir=cfg.OUTPUT_DIR)
+    if os.path.exists(paths.output_model_full_path):
+        os.remove(paths.output_model_full_path)
+    checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
     checkpointer.save(paths.output_model_filename)
     logger.info("Final model saved")
 
 
-def freeze_model_parts(model):
-    for component in model:
-        if hasattr(component, "bias"):
-            component.bias = False
-            component.weight = False
-        else:
-            freeze_model_parts(component)
-
-
 def predict_scores(
-    model_weights: str, regist_instances: bool = True, output_path: str = None
+    model_weights: str,
+    regist_instances: bool = True,
+    output_path: str = None,
+    cfg: CfgNode = None,
 ):
-    logger = startup(regist_instances=regist_instances)
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
     test_ds = DatasetCatalog.get("test")
 
@@ -276,9 +282,12 @@ def predict_scores(
 
 
 def label_predictions_on_images(
-    image_list: List[str], regist_instances: bool = True, output_path: str = "./output/"
+    image_list: List[str],
+    regist_instances: bool = True,
+    output_path: str = "./output/",
+    cfg: CfgNode = None,
 ):
-    logger = startup(regist_instances=regist_instances)
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
     test_ds = DatasetCatalog.get("test")
     metadata_json = load_coco_json(paths.metadata_filename, "", "metadata")
@@ -312,9 +321,12 @@ def label_predictions_on_images(
 
 
 def get_coco_eval_results(
-    model_weights: str, regist_instances: bool = True, output_path: str = "./output/"
+    model_weights: str,
+    regist_instances: bool = True,
+    output_path: str = "./output/",
+    cfg: CfgNode = None,
 ):
-    logger = startup(regist_instances=regist_instances)
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
     test_ds = DatasetCatalog.get("test")
 
