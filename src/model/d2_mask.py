@@ -47,7 +47,7 @@ def startup(regist_instances: bool = True, cfg: CfgNode = None):
 
 
 def register_new_coco_instance(annotation_path: str, data_path: str, tag: str):
-    return register_coco_instances(tag, annotation_path, data_path)
+    return register_coco_instances(tag, {}, annotation_path, data_path)
 
 
 def train(output_folder: str = None, cfg: CfgNode = None):

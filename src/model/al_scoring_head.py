@@ -327,7 +327,6 @@ class ALScoringROIHeads(ROIHeads):
 
         if self.training:
             losses = self.box_predictor.losses(predictions, proposals)
-            print("Box actual", losses["loss_box_reg"].item())
             # proposals is modified in-place below, so losses must be computed first.
             if self.train_on_pred_boxes:
                 with torch.no_grad():
@@ -339,7 +338,6 @@ class ALScoringROIHeads(ROIHeads):
                     ):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
             score_predictions = self.box_scorer(box_features_after_pool, self.training)
-            print("Box pred", score_predictions.item())
             del box_features_after_pool
             losses.update(
                 self.box_scorer.losses(
@@ -391,9 +389,7 @@ class ALScoringROIHeads(ROIHeads):
 
         if self.training:
             loss = self.mask_head(features, instances)
-            print("Mask actual", loss["loss_mask"].item())
             score_predictions = self.mask_scorer(features)
-            print("Mask pred", score_predictions.item())
             loss.update(
                 self.mask_scorer.losses(score_predictions, 10 * loss.get("loss_mask"))
             )

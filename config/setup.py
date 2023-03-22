@@ -13,7 +13,7 @@ initial_model = {
 
 initial_score = {
     "train_dataset": "train",
-    "ims_per_batch": 5,
+    "ims_per_batch": 1,
     "base_lr": 0.0001,
     "warmup_iters": 100,
     "model_weights": None,
@@ -37,13 +37,13 @@ cycle_model = {
 }
 
 cycle_score = {
-    "ims_per_batch": 5,
+    "ims_per_batch": 1,
     "base_lr": 0.00005,
     "warmup_iters": 100,
     "model_weights": None,
     "num_decays": 0,
     "steps": (),
     "gamma": 0.2,
-    "max_iter": 400,
-    "eval_period": 2000,
+    "max_iter": 2000,
+    "eval_period": 3000,
 }
