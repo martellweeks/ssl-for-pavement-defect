@@ -27,7 +27,7 @@ from src.model.al_scoring_head import ALScoringROIHeads
 
 
 def startup(regist_instances: bool = True, cfg: CfgNode = None):
-    logger = setup_logger(output=f"log_{datetime.now()}.log")
+    logger = setup_logger(output="./log_0322_1625.log")
 
     TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
     CUDA_VERSION = torch.__version__.split("+")[-1]
@@ -68,7 +68,7 @@ def train(output_folder: str = None, cfg: CfgNode = None):
 
     logger.info("Training completed")
     checkpointer = DetectionCheckpointer(trainer.model, save_dir=cfg.OUTPUT_DIR)
-    checkpointer.save(paths.output_model_filename)
+    checkpointer.save(paths.final_model_filename)
     logger.info("Final model saved")
 
 
@@ -112,10 +112,10 @@ def train_model_only(
     trainer.train()
 
     logger.info("Training completed")
-    if os.path.exists(paths.output_model_full_path):
-        os.remove(paths.output_model_full_path)
+    if os.path.exists(paths.final_model_full_path):
+        os.remove(paths.final_model_full_path)
     checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
-    checkpointer.save(paths.output_model_filename)
+    checkpointer.save(paths.final_model_filename)
     logger.info("Final model saved")
 
 
@@ -208,10 +208,10 @@ def train_scores_only(
     trainer.train()
 
     logger.info("Training completed")
-    if os.path.exists(paths.output_model_full_path):
-        os.remove(paths.output_model_full_path)
+    if os.path.exists(paths.final_model_full_path):
+        os.remove(paths.final_model_full_path)
     checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
-    checkpointer.save(paths.output_model_filename)
+    checkpointer.save(paths.final_model_filename)
     logger.info("Final model saved")
 
 
@@ -220,6 +220,7 @@ def predict_scores(
     regist_instances: bool = True,
     output_path: str = None,
     cfg: CfgNode = None,
+    test_anns_file: str = None,
 ):
     logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
@@ -237,8 +238,17 @@ def predict_scores(
 
     predictor = DefaultPredictor(cfg)
 
+    test_json_file = open(
+        test_anns_file if test_anns_file is not None else paths.test_anns_path
+    )
+    test_json = json.load(test_json_file)
+
+    prediction_imgs = list()
+
+    for img in test_json["images"]:
+        prediction_imgs.append(os.path.join("data/A14_L2", img["file_name"]))
+
     score_predictions = list()
-    prediction_imgs = glob.glob(os.path.join("data/test/*"))
     for d in tqdm(prediction_imgs, desc="Running prediction on images"):
         im = cv2.imread(d)
         predictions = predictor(im)
@@ -323,16 +333,15 @@ def label_predictions_on_images(
 def get_coco_eval_results(
     model_weights: str,
     regist_instances: bool = True,
+    test_data_tag: str = "test",
     output_path: str = "./output/",
     cfg: CfgNode = None,
 ):
     logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
-    test_ds = DatasetCatalog.get("test")
-
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
     cfg.MODEL.WEIGHTS = model_weights
-    cfg.DATASETS.TEST = ("test",)
+    cfg.DATASETS.TEST = (test_data_tag,)
 
     os.makedirs(output_path, exist_ok=True)
 

@@ -10,34 +10,35 @@ def exp_0322(mode: str = "AL"):
     Testing active learning pipeline for A14 Lane 2 Pavement data
     Against random sampling control
     """
-    d2_mask.train_model_only(
-        output_folder="0322_init_model",
-        regist_instances=True,
-        cfg=config.get_cfg_with_exp_setup(**setup.initial_model),
-    )
+    # d2_mask.train_model_only(
+    #     output_folder="0322_init_model",
+    #     regist_instances=True,
+    #     cfg=config.get_cfg_with_exp_setup(**setup.initial_model),
+    # )
 
-    d2_mask.get_coco_eval_results(
-        model_weights=paths.final_model_full_path,
-        regist_instances=False,
-        output_path="./output/0322_init_model",
-    )
+    # d2_mask.get_coco_eval_results(
+    #     model_weights=paths.final_model_full_path,
+    #     regist_instances=False,
+    #     output_path="./output/0322_init_model",
+    # )
 
-    d2_mask.train_scores_only(
-        output_folder="0322_init_score",
-        model_weights=paths.final_model_full_path,
-        regist_instances=False,
-        cfg=config.get_cfg_with_exp_setup(**setup.initial_score),
-    )
+    # d2_mask.train_scores_only(
+    #     output_folder="0322_init_score",
+    #     model_weights=paths.final_model_full_path,
+    #     regist_instances=False,
+    #     cfg=config.get_cfg_with_exp_setup(**setup.initial_score),
+    # )
 
     d2_mask.predict_scores(
         model_weights=paths.final_model_full_path,
         output_path="./output/0322_init_score",
-        regist_instances=False,
+        regist_instances=True,
+        test_anns_file="./data/annotations/A14_L2/test.json",
     )
 
     al_scoring.calculate_al_score(
         file_path="./output/0322_init_score/loss_predictions.csv",
-        output_path="./output/0320_init_score",
+        output_path="./output/0322_init_score",
     )
 
     if mode == "AL":
@@ -72,12 +73,12 @@ def exp_0322(mode: str = "AL"):
         d2_mask.train_model_only(
             output_folder=f"0322_model_{it}",
             regist_instances=False,
+            model_weights=paths.final_model_full_path,
             cfg=config.get_cfg_with_exp_setup(
                 train_dataset=f"train_{it}", **setup.cycle_model
             ),
         )
 
-        # Evaluation of model always with the initial unlabeled set
         d2_mask.get_coco_eval_results(
             model_weights=paths.final_model_full_path,
             regist_instances=False,
@@ -97,23 +98,26 @@ def exp_0322(mode: str = "AL"):
             model_weights=paths.final_model_full_path,
             output_path=f"./output/0322_score_{it}",
             regist_instances=False,
+            test_anns_file=f"./output/0322_labels/test_{it}.json",
         )
 
         if mode == "AL":
+            al_scoring.calculate_al_score(
+                file_path=f"./output/0322_score_{it}/loss_predictions.csv",
+                output_path=f"./output/0322_score_{it}",
+            )
+
             update_image_list = al_scoring.get_top_n_images(
                 score_file_path=f"./output/0322_score_{it}/al_score.csv", no_img=40
             )
         else:
             update_image_list = al_label_transfer.get_random_n_images(
-                test_anns_file=f"./output/0322_labels/test_{it}", no_img=40
+                test_anns_file=f"./output/0322_labels/test_{it}.json", no_img=40
             )
-
-        update_image_list = al_scoring.get_top_n_images(
-            score_file_path=f"./output/0322_score{it}/al_score.csv", no_img=40
-        )
 
         al_label_transfer.move_labels_to_train(
             train_anns_file=f"./output/0322_labels/train_{it}.json",
+            test_anns_file=f"./output/0322_labels/test_{it}.json",
             image_list=update_image_list,
             output_path="./output/0322_labels",
             output_file_tag=f"{it+1}",
@@ -121,19 +125,30 @@ def exp_0322(mode: str = "AL"):
 
 
 if __name__ == "__main__":
-    # exp_0322(mode="AL")
+    exp_0322(mode="AL")
 
-    imlist = al_label_transfer.get_random_n_images(
-        test_anns_file="./data/annotations/A14_L2/raw.json", no_img=200
-    )
+    # d2_mask.predict_scores(
+    #     model_weights='./output/0322_score_0/model_0000099.pth',
+    #     output_path=f"./tests",
+    #     regist_instances=True,
+    # )
 
-    al_label_transfer.move_labels_to_train(
-        image_list=imlist,
-        output_path="./data/annotations/A14_L2",
-        output_file_tag=None,
-        train_anns_file="./data/annotations/A14_L2/metadata.json",
-        test_anns_file="./data/annotations/A14_L2/raw.json",
-    )
+    # d2_mask.get_coco_eval_results(
+    #     model_weights=paths.final_model_full_path,
+    #     regist_instances=True,
+    #     output_path=f"./tests",
+    # )
+    # imlist = al_label_transfer.get_random_n_images(
+    #     test_anns_file="./data/annotations/A14_L2/raw.json", no_img=200
+    # )
+
+    # al_label_transfer.move_labels_to_train(
+    #     image_list=imlist,
+    #     output_path="./data/annotations/A14_L2",
+    #     output_file_tag=None,
+    #     train_anns_file="./data/annotations/A14_L2/metadata.json",
+    #     test_anns_file="./data/annotations/A14_L2/raw.json",
+    # )
 
     # d2_mask.train_model_only(output_folder="0313_model_2")
 
