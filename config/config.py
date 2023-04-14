@@ -84,7 +84,7 @@ def get_cfg_with_exp_setup(
     cfg.SOLVER.WARMUP_ITERS = warmup_iters
     cfg.SOLVER.NUM_DECAYS = num_decays  # Total lr decay
     cfg.SOLVER.GAMMA = gamma  # Decay to gamma times previous lr
-    cfg.SOLVER.CHECKPOINT_PERIOD = 400  # Save checkpoint every 100 iterations
+    cfg.SOLVER.CHECKPOINT_PERIOD = 1000  # Save checkpoint every 100 iterations
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5

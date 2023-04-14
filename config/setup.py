@@ -39,7 +39,7 @@ initial_score_mask_test = {
 
 cycle_model = {
     "ims_per_batch": 5,
-    "base_lr": 0.00005,
+    "base_lr": 0.0001,
     "warmup_iters": 100,
     "num_decays": 0,
     "steps": (),
@@ -50,7 +50,7 @@ cycle_model = {
 
 cycle_model_short = {
     "ims_per_batch": 5,
-    "base_lr": 0.00005,
+    "base_lr": 0.0001,
     "warmup_iters": 100,
     "num_decays": 0,
     "steps": (),

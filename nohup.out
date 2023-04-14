@@ -22,3 +22,6 @@ TensorFlow installation not found - running with reduced feature set.
 /home/cituser/.local/lib/python3.9/site-packages/tensorboard_data_server/bin/server: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not found (required by /home/cituser/.local/lib/python3.9/site-packages/tensorboard_data_server/bin/server)
 Serving TensorBoard on localhost; to expose to the network, use a proxy or pass --bind_all
 TensorBoard 2.12.0 at http://localhost:6006/ (Press CTRL+C to quit)
+W0414 18:58:31.864299 140412975847168 plugin_event_multiplexer.py:266] Deleting accumulator 'A14_L2/0324_init_score_box'
+W0414 18:58:31.864602 140412975847168 plugin_event_multiplexer.py:266] Deleting accumulator 'A14_L2/0324_init_model'
+W0414 18:58:31.864641 140412975847168 plugin_event_multiplexer.py:266] Deleting accumulator 'A14_L2/0324_init_score'

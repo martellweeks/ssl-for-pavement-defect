@@ -27,7 +27,7 @@ from src.model.al_scoring_head import ALScoringROIHeads
 
 
 def startup(regist_instances: bool = True, cfg: CfgNode = None):
-    logger = setup_logger(output="./log_0414_1750.log")
+    logger = setup_logger(output="./log_0414_al.log")
 
     TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
     CUDA_VERSION = torch.__version__.split("+")[-1]
