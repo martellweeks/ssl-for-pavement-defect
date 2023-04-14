@@ -489,14 +489,30 @@ class MaskScorePredictionLayers(nn.Module):
             stride=1,
             padding=1,
         )
+        self.conv2 = nn.Conv2d(
+            64,
+            32,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
         self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.batchnorm = nn.BatchNorm2d(num_features=64)
+        self.dropout = nn.Dropout()
         self.flatten1 = nn.Flatten()
         self.flatten2 = nn.Flatten(start_dim=0)
-        self.fc1 = nn.Linear(64 * input_shape.height * input_shape.width, 1)
+        self.fc1 = nn.Linear(
+            32 * int(input_shape.height / 2) * int(input_shape.width / 2), 1
+        )
         self.fc2 = nn.Linear(128, 1)
 
     def forward(self, features):
         res = self.conv1(features)
+        res = self.relu(res)
+        res = self.pool(res)
+        res = self.batchnorm(res)
+        res = self.conv2(res)
         res = self.relu(res)
         res = self.flatten1(res)
         res = self.fc1(res)
@@ -504,11 +520,12 @@ class MaskScorePredictionLayers(nn.Module):
         res = self.flatten2(res)
         if res.shape[0] != 128:
             res = nn.functional.pad(res, pad=(0, 128 - res.shape[0]))
+        res = self.dropout(res)
         res = self.fc2(res)
         return res
 
     def losses(self, predictions, proposals):
-        loss = nn.functional.mse_loss(
+        loss = nn.functional.huber_loss(
             predictions, torch.tensor([proposals], device="cuda:0")
         )
         return {"loss_mask_score": loss}

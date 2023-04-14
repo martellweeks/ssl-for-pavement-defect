@@ -27,7 +27,7 @@ from src.model.al_scoring_head import ALScoringROIHeads
 
 
 def startup(regist_instances: bool = True, cfg: CfgNode = None):
-    logger = setup_logger(output="./log_0322_1625.log")
+    logger = setup_logger(output="./log_0414_1750.log")
 
     TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
     CUDA_VERSION = torch.__version__.split("+")[-1]
@@ -101,12 +101,17 @@ def train_model_only(
     trainer.model.roi_heads.box_scorer.fc1.weight.requires_grad = False
     trainer.model.roi_heads.box_scorer.fc2.bias.requires_grad = False
     trainer.model.roi_heads.box_scorer.fc2.weight.requires_grad = False
+
     trainer.model.roi_heads.mask_scorer.conv1.bias.requires_grad = False
     trainer.model.roi_heads.mask_scorer.conv1.weight.requires_grad = False
     trainer.model.roi_heads.mask_scorer.fc1.bias.requires_grad = False
     trainer.model.roi_heads.mask_scorer.fc1.weight.requires_grad = False
     trainer.model.roi_heads.mask_scorer.fc2.bias.requires_grad = False
     trainer.model.roi_heads.mask_scorer.fc2.weight.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.conv2.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.conv2.weight.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.batchnorm.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.batchnorm.weight.requires_grad = False
 
     logger.info("Start training...")
     trainer.train()
@@ -215,6 +220,216 @@ def train_scores_only(
     logger.info("Final model saved")
 
 
+def train_mask_score_only(
+    output_folder: str = None,
+    model_weights: str = None,
+    regist_instances: bool = True,
+    cfg: CfgNode = None,
+):
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
+
+    cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
+
+    if output_folder is not None:
+        cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, output_folder)
+
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+    if model_weights is not None:
+        cfg.MODEL.WEIGHTS = model_weights
+
+    trainer = hooks.MyTrainer(cfg)
+    trainer.resume_or_load(resume=False)
+
+    # Freeze weights and biases of all model except score predictors
+
+    trainer.model.backbone.fpn_lateral2.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral3.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral4.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral5.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral2.bias.requires_grad = False
+    trainer.model.backbone.fpn_lateral3.bias.requires_grad = False
+    trainer.model.backbone.fpn_lateral4.bias.requires_grad = False
+    trainer.model.backbone.fpn_lateral5.bias.requires_grad = False
+    trainer.model.backbone.fpn_output2.weight.requires_grad = False
+    trainer.model.backbone.fpn_output3.weight.requires_grad = False
+    trainer.model.backbone.fpn_output4.weight.requires_grad = False
+    trainer.model.backbone.fpn_output5.weight.requires_grad = False
+    trainer.model.backbone.fpn_output2.bias.requires_grad = False
+    trainer.model.backbone.fpn_output3.bias.requires_grad = False
+    trainer.model.backbone.fpn_output4.bias.requires_grad = False
+    trainer.model.backbone.fpn_output5.bias.requires_grad = False
+    for conv in trainer.model.backbone.lateral_convs:
+        conv.weight.requires_grad = False
+        conv.bias.requires_grad = False
+    for conv in trainer.model.backbone.output_convs:
+        conv.weight.requires_grad = False
+        conv.bias.requires_grad = False
+
+    trainer.model.proposal_generator.rpn_head.anchor_deltas.weight.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.anchor_deltas.bias.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.conv.weight.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.conv.bias.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.objectness_logits.weight.requires_grad = (
+        False
+    )
+    trainer.model.proposal_generator.rpn_head.objectness_logits.bias.requires_grad = (
+        False
+    )
+
+    trainer.model.roi_heads.box_head.fc1.weight.requires_grad = False
+    trainer.model.roi_heads.box_head.fc2.weight.requires_grad = False
+    trainer.model.roi_heads.box_head.fc1.bias.requires_grad = False
+    trainer.model.roi_heads.box_head.fc2.bias.requires_grad = False
+    for i in trainer.model.roi_heads.box_head.fcs:
+        i.weight.requires_grad = False
+        i.bias.requires_grad = False
+    trainer.model.roi_heads.box_predictor.bbox_pred.weight.requires_grad = False
+    trainer.model.roi_heads.box_predictor.cls_score.weight.requires_grad = False
+    trainer.model.roi_heads.box_predictor.bbox_pred.bias.requires_grad = False
+    trainer.model.roi_heads.box_predictor.cls_score.bias.requires_grad = False
+
+    for i in trainer.model.roi_heads.mask_head.conv_norm_relus:
+        i.weight.requires_grad = False
+        i.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.deconv.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.deconv.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn1.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn2.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn3.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn4.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.predictor.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn1.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn2.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn3.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn4.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.predictor.bias.requires_grad = False
+
+    trainer.model.roi_heads.box_scorer.conv1.bias.requires_grad = False
+    trainer.model.roi_heads.box_scorer.conv1.weight.requires_grad = False
+    trainer.model.roi_heads.box_scorer.fc1.bias.requires_grad = False
+    trainer.model.roi_heads.box_scorer.fc1.weight.requires_grad = False
+    trainer.model.roi_heads.box_scorer.fc2.bias.requires_grad = False
+    trainer.model.roi_heads.box_scorer.fc2.weight.requires_grad = False
+
+    logger.info("Start training...")
+    trainer.train()
+
+    logger.info("Training completed")
+    if os.path.exists(paths.final_model_full_path):
+        os.remove(paths.final_model_full_path)
+    checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
+    checkpointer.save(paths.final_model_filename)
+    logger.info("Final model saved")
+
+
+def train_box_score_only(
+    output_folder: str = None,
+    model_weights: str = None,
+    regist_instances: bool = True,
+    cfg: CfgNode = None,
+):
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
+
+    cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
+
+    if output_folder is not None:
+        cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, output_folder)
+
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+    if model_weights is not None:
+        cfg.MODEL.WEIGHTS = model_weights
+
+    trainer = hooks.MyTrainer(cfg)
+    trainer.resume_or_load(resume=False)
+
+    # Freeze weights and biases of all model except score predictors
+
+    trainer.model.backbone.fpn_lateral2.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral3.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral4.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral5.weight.requires_grad = False
+    trainer.model.backbone.fpn_lateral2.bias.requires_grad = False
+    trainer.model.backbone.fpn_lateral3.bias.requires_grad = False
+    trainer.model.backbone.fpn_lateral4.bias.requires_grad = False
+    trainer.model.backbone.fpn_lateral5.bias.requires_grad = False
+    trainer.model.backbone.fpn_output2.weight.requires_grad = False
+    trainer.model.backbone.fpn_output3.weight.requires_grad = False
+    trainer.model.backbone.fpn_output4.weight.requires_grad = False
+    trainer.model.backbone.fpn_output5.weight.requires_grad = False
+    trainer.model.backbone.fpn_output2.bias.requires_grad = False
+    trainer.model.backbone.fpn_output3.bias.requires_grad = False
+    trainer.model.backbone.fpn_output4.bias.requires_grad = False
+    trainer.model.backbone.fpn_output5.bias.requires_grad = False
+    for conv in trainer.model.backbone.lateral_convs:
+        conv.weight.requires_grad = False
+        conv.bias.requires_grad = False
+    for conv in trainer.model.backbone.output_convs:
+        conv.weight.requires_grad = False
+        conv.bias.requires_grad = False
+
+    trainer.model.proposal_generator.rpn_head.anchor_deltas.weight.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.anchor_deltas.bias.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.conv.weight.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.conv.bias.requires_grad = False
+    trainer.model.proposal_generator.rpn_head.objectness_logits.weight.requires_grad = (
+        False
+    )
+    trainer.model.proposal_generator.rpn_head.objectness_logits.bias.requires_grad = (
+        False
+    )
+
+    trainer.model.roi_heads.box_head.fc1.weight.requires_grad = False
+    trainer.model.roi_heads.box_head.fc2.weight.requires_grad = False
+    trainer.model.roi_heads.box_head.fc1.bias.requires_grad = False
+    trainer.model.roi_heads.box_head.fc2.bias.requires_grad = False
+    for i in trainer.model.roi_heads.box_head.fcs:
+        i.weight.requires_grad = False
+        i.bias.requires_grad = False
+    trainer.model.roi_heads.box_predictor.bbox_pred.weight.requires_grad = False
+    trainer.model.roi_heads.box_predictor.cls_score.weight.requires_grad = False
+    trainer.model.roi_heads.box_predictor.bbox_pred.bias.requires_grad = False
+    trainer.model.roi_heads.box_predictor.cls_score.bias.requires_grad = False
+
+    for i in trainer.model.roi_heads.mask_head.conv_norm_relus:
+        i.weight.requires_grad = False
+        i.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.deconv.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.deconv.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn1.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn2.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn3.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn4.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.predictor.weight.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn1.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn2.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn3.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.mask_fcn4.bias.requires_grad = False
+    trainer.model.roi_heads.mask_head.predictor.bias.requires_grad = False
+
+    trainer.model.roi_heads.mask_scorer.conv1.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.conv1.weight.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.fc1.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.fc1.weight.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.fc2.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.fc2.weight.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.conv2.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.conv2.weight.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.batchnorm.bias.requires_grad = False
+    trainer.model.roi_heads.mask_scorer.batchnorm.weight.requires_grad = False
+
+    logger.info("Start training...")
+    trainer.train()
+
+    logger.info("Training completed")
+    if os.path.exists(paths.final_model_full_path):
+        os.remove(paths.final_model_full_path)
+    checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
+    checkpointer.save(paths.final_model_filename)
+    logger.info("Final model saved")
+
+
 def predict_scores(
     model_weights: str,
     regist_instances: bool = True,
@@ -304,7 +519,7 @@ def label_predictions_on_images(
     metadata = MetadataCatalog.get("metadata")
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
-    cfg.MODEL.WEIGHTS = "./output/0317_score_2/model_0001999.pth"
+    cfg.MODEL.WEIGHTS = "./output/A14_L2/0322_score_1/model_final.pth"
 
     os.makedirs(output_path, exist_ok=True)
 

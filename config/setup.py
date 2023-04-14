@@ -1,27 +1,40 @@
 initial_model = {
     "train_dataset": "train",
     "ims_per_batch": 5,
-    "base_lr": 0.0005,
+    "base_lr": 0.001,
     "warmup_iters": 200,
     "model_weights": None,
     "num_decays": 4,
     "steps": (600, 700, 800, 900),
     "gamma": 0.2,
-    "max_iter": 1500,
+    "max_iter": 2000,
     "eval_period": 2000,
 }
 
 initial_score = {
     "train_dataset": "train",
     "ims_per_batch": 1,
-    "base_lr": 0.0001,
+    "base_lr": 0.00001,
     "warmup_iters": 100,
     "model_weights": None,
-    "num_decays": 4,
-    "steps": (200, 300, 400, 500),
+    "num_decays": 0,
+    "steps": (),
     "gamma": 0.2,
-    "max_iter": 1000,
-    "eval_period": 2000,
+    "max_iter": 5000,
+    "eval_period": 200000,
+}
+
+initial_score_mask_test = {
+    "train_dataset": "train",
+    "ims_per_batch": 1,
+    "base_lr": 0.000001,
+    "warmup_iters": 100,
+    "model_weights": None,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 10000,
+    "eval_period": 200000,
 }
 
 cycle_model = {
@@ -31,17 +44,28 @@ cycle_model = {
     "num_decays": 0,
     "steps": (),
     "gamma": 0.2,
-    "max_iter": 400,
+    "max_iter": 1500,
     "eval_period": 2000,
 }
 
-cycle_score = {
-    "ims_per_batch": 1,
+cycle_model_short = {
+    "ims_per_batch": 5,
     "base_lr": 0.00005,
     "warmup_iters": 100,
     "num_decays": 0,
     "steps": (),
     "gamma": 0.2,
-    "max_iter": 800,
+    "max_iter": 500,
+    "eval_period": 2000,
+}
+
+cycle_score = {
+    "ims_per_batch": 1,
+    "base_lr": 0.00001,
+    "warmup_iters": 100,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 2000,
     "eval_period": 3000,
 }
