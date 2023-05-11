@@ -22,12 +22,14 @@ from detectron2.utils.visualizer import Visualizer
 from tqdm import tqdm
 
 from config import config, paths
-from src.model import hooks
-from src.model.al_scoring_head import ALScoringROIHeads
+from src.engine.trainer import BaseTrainer
+from src.models.al_roi_heads import ALScoringROIHeads
 
 
-def startup(regist_instances: bool = True, cfg: CfgNode = None):
-    logger = setup_logger(output="./log_0414_al.log")
+def startup(
+    regist_instances: bool = True, cfg: CfgNode = None, logfile: str = "default"
+):
+    logger = setup_logger(output=f"./log_{logfile}.log")
 
     TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
     CUDA_VERSION = torch.__version__.split("+")[-1]
@@ -41,7 +43,7 @@ def startup(regist_instances: bool = True, cfg: CfgNode = None):
         register_coco_instances("test", {}, paths.test_anns_path, paths.raw_data_path)
 
     if cfg is None:
-        cfg = config.get_default_cfg()
+        cfg = config.get_cfg_for_al()
 
     return logger, cfg
 
@@ -60,7 +62,27 @@ def train(output_folder: str = None, cfg: CfgNode = None):
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
-    trainer = hooks.MyTrainer(cfg)
+    trainer = BaseTrainer(cfg)
+    trainer.resume_or_load(resume=False)
+
+    logger.info("Start training...")
+    trainer.train()
+
+    logger.info("Training completed")
+    checkpointer = DetectionCheckpointer(trainer.model, save_dir=cfg.OUTPUT_DIR)
+    checkpointer.save(paths.final_model_filename)
+    logger.info("Final model saved")
+
+
+def train_vanilla_mrcnn(output_folder: str = None, cfg: CfgNode = None, logger=None):
+    if output_folder is not None:
+        cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, output_folder)
+
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+    cfg.MODEL.ROI_HEADS.NAME = "StandardROIHeads"
+
+    trainer = BaseTrainer(cfg)
     trainer.resume_or_load(resume=False)
 
     logger.info("Start training...")
@@ -90,7 +112,7 @@ def train_model_only(
     if model_weights is not None:
         cfg.MODEL.WEIGHTS = model_weights
 
-    trainer = hooks.MyTrainer(cfg)
+    trainer = BaseTrainer(cfg)
     trainer.resume_or_load(resume=False)
 
     # Freeze weights and biases of score prediction module
@@ -142,7 +164,7 @@ def train_scores_only(
     if model_weights is not None:
         cfg.MODEL.WEIGHTS = model_weights
 
-    trainer = hooks.MyTrainer(cfg)
+    trainer = BaseTrainer(cfg)
     trainer.resume_or_load(resume=False)
 
     # Freeze weights and biases of all model except score predictors
@@ -238,7 +260,7 @@ def train_mask_score_only(
     if model_weights is not None:
         cfg.MODEL.WEIGHTS = model_weights
 
-    trainer = hooks.MyTrainer(cfg)
+    trainer = BaseTrainer(cfg)
     trainer.resume_or_load(resume=False)
 
     # Freeze weights and biases of all model except score predictors
@@ -341,7 +363,7 @@ def train_box_score_only(
     if model_weights is not None:
         cfg.MODEL.WEIGHTS = model_weights
 
-    trainer = hooks.MyTrainer(cfg)
+    trainer = BaseTrainer(cfg)
     trainer.resume_or_load(resume=False)
 
     # Freeze weights and biases of all model except score predictors

@@ -1,6 +1,6 @@
 from config import config, paths, setup
+from src.controller import d2_mask
 from src.data import al_label_transfer
-from src.model import d2_mask
 from src.scores import al_scoring
 
 if __name__ == "__main__":
