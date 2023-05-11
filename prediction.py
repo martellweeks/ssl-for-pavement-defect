@@ -14,7 +14,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.utils.visualizer import Visualizer
 from tqdm import tqdm
 
-from ..src.model.al_scoring_head import ALScoringROIHeads
+from src.model.al_scoring_head import ALScoringROIHeads
 
 warnings.filterwarnings(action="ignore", category=UserWarning)
 
