@@ -4,12 +4,26 @@ from src.data import al_label_transfer
 from src.scores import al_scoring
 
 if __name__ == "__main__":
-    d2_mask.predict_scores(
-        model_weights="output/A14_L2/0414_init_score/model_final.pth",
-        output_path="./tests",
+    # d2_mask.predict_scores(
+    #     model_weights="output/A14_L2/0414_init_score/model_final.pth",
+    #     output_path="./tests",
+    #     regist_instances=True,
+    #     test_anns_file="./data/annotations/A14_L2/quick_test.json",
+    # )
+
+    d2_mask.get_coco_eval_results_cns(
+        model_weights="output/0512_cns/model_final.pth",
         regist_instances=True,
-        test_anns_file="./data/annotations/A14_L2/quick_test.json",
+        output_path="./test/0512_cns",
+        cfg=config.get_cfg_for_cns(**setup.cns_test),
     )
+
+    # d2_mask.get_coco_eval_results(
+    #     model_weights="output/0511_control_al/model_final.pth",
+    #     regist_instances=True,
+    #     output_path="./test/0511_control_al",
+    #     cfg=config.get_cfg_for_al(**setup.al_control),
+    # )
 
     # update_image_list = al_label_transfer.get_random_n_images(
     #     test_anns_file=f"./output/0324_labels/test_0.json", no_img=200

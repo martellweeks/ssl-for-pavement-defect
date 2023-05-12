@@ -3,15 +3,15 @@ import os
 
 project_path = ""
 
-raw_data_path = os.path.join(project_path, "data/A12")
-train_data_path = os.path.join(project_path, "data/A12")
-val_data_path = os.path.join(project_path, "data/A12")
-test_data_path = os.path.join(project_path, "data/A12")
+raw_data_path = os.path.join(project_path, "data/A14_L2")
+train_data_path = os.path.join(project_path, "data/A14_L2")
+val_data_path = os.path.join(project_path, "data/A14_L2")
+test_data_path = os.path.join(project_path, "data/A14_L2")
 
-raw_anns_filename = "data/annotations/A12/raw.json"
-train_anns_filename = "data/annotations/A12/vanilla/train_patchonly.json"
-val_anns_filename = "data/annotations/A12/vanilla/val_patchonly.json"
-test_anns_filename = "data/annotations/A12/vanilla/test_patchonly.json"
+raw_anns_filename = "data/annotations/A14_L2/raw.json"
+train_anns_filename = "data/annotations/A14_L2/train.json"
+val_anns_filename = "data/annotations/A14_L2/train.json"
+test_anns_filename = "data/annotations/A14_L2/test.json"
 metadata_filename = "data/annotations/A14_L2/metadata.json"
 
 raw_anns_path = os.path.join(project_path, raw_anns_filename)

@@ -19,6 +19,7 @@ def get_cfg_for_al(
     gamma: float = 0.2,
     max_iter: int = 1000,
     eval_period: int = 200,
+    checkpoint_period: int = 1000,
 ):
     assert len(steps) == num_decays
 
@@ -49,7 +50,9 @@ def get_cfg_for_al(
     cfg.SOLVER.WARMUP_ITERS = warmup_iters
     cfg.SOLVER.NUM_DECAYS = num_decays  # Total lr decay
     cfg.SOLVER.GAMMA = gamma  # Decay to gamma times previous lr
-    cfg.SOLVER.CHECKPOINT_PERIOD = 1000  # Save checkpoint every 100 iterations
+    cfg.SOLVER.CHECKPOINT_PERIOD = (
+        checkpoint_period  # Save checkpoint every n iterations
+    )
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
@@ -70,7 +73,9 @@ def get_cfg_for_al(
 
 def get_cfg_for_cns(
     train_dataset: str = "train",
-    ims_per_batch: int = 2,
+    unlabeled_dataset: str = "test",
+    test_dataset: str = "val",
+    ims_per_batch: int = 3,
     base_lr: int = 0.001,
     warmup_iters: int = 200,
     model_weights: str = None,
@@ -79,6 +84,8 @@ def get_cfg_for_cns(
     gamma: float = 0.2,
     max_iter: int = 1000,
     eval_period: int = 200,
+    checkpoint_period: int = 1000,
+    cns_beta: float = 0.5,
     cns_w_t0: int = 1,
     cns_w_t1: int = 5000,
     cns_w_t2: int = 6000,
@@ -112,7 +119,9 @@ def get_cfg_for_cns(
     cfg.SOLVER.WARMUP_ITERS = warmup_iters
     cfg.SOLVER.NUM_DECAYS = num_decays  # Total lr decay
     cfg.SOLVER.GAMMA = gamma  # Decay to gamma times previous lr
-    cfg.SOLVER.CHECKPOINT_PERIOD = 1000  # Save checkpoint every 100 iterations
+    cfg.SOLVER.CHECKPOINT_PERIOD = (
+        checkpoint_period  # Save checkpoint every n iterations
+    )
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
@@ -135,8 +144,8 @@ def get_cfg_for_cns(
     ### Solver parameters
     # Note: with CNS enabled, the "effective" batch size (in terms of memory used) is twice larger as images get flipped
     cfg.SOLVER.IMS_PER_BATCH = ims_per_batch
-    cfg.SOLVER.IMS_PER_BATCH_LABELED = int(ims_per_batch / 2)
-    cfg.SOLVER.IMS_PER_BATCH_UNLABELED = int(ims_per_batch / 2)
+    cfg.SOLVER.IMS_PER_BATCH_LABELED = 1
+    cfg.SOLVER.IMS_PER_BATCH_UNLABELED = 2
 
     # CNS weight scheduling parameters (see their supplementary)
     # Note that here we change the notationn - T0 defines the number of iterations until the weight is zero,
@@ -144,7 +153,7 @@ def get_cfg_for_cns(
     # and T defines the target iteration when the weight is expected to finish ramping down (note: it's OK if
     # it's less than `SOLVER.NUM_ITER`)
     cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_BETA = (
-        0.0  # Base multiplier for CNS weights (not mentioned in the paper)
+        cns_beta  # Base multiplier for CNS weights (not mentioned in the paper)
     )
     cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T0 = (
         cns_w_t0  # Train for one iteration without CNS loss
@@ -153,6 +162,17 @@ def get_cfg_for_cns(
     cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T2 = cns_w_t2
     # Note: even though `T` represents the total number of iterations, it's safe to continue training after `T` iters
     cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T = cns_w_t
+
+    cfg.DATASETS.TRAIN = (
+        train_dataset,
+    )  # Note: only a single dataset is currently supported
+    # Note: only a single dataset is currently supported; also note: this is not used when `cfg.DATASETS.MODE`
+    # is "RANDOM_SPLIT"
+    cfg.DATASETS.TRAIN_UNLABELED = (unlabeled_dataset,)
+
+    # Only VOC and COCO are currently supported for evaluation; also only a **single** evaluation dataset
+    # is supported (for visualization reasons; if you turn it off, multiple datasets should work)
+    cfg.DATASETS.TEST = (test_dataset,)
 
     # Defines if two separate datasets should be used as labeled and unlabeled data, or a single dataset must
     # be split into labeled and unlabeled parts; supported values: "CROSS_DATASET", "RANDOM_SPLIT"
@@ -183,5 +203,7 @@ def get_cfg_for_cns(
     # for reproducibility and to make sure that each GPU uses the same data split;
     # must be set if `cfg.DATASETS.SPLIT_USE_PREDEFINED` is True
     cfg.DATASETS.SPLIT_SEED = None
+
+    cfg.VIS_TEST = False
 
     return cfg

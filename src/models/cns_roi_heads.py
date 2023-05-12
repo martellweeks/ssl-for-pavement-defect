@@ -364,14 +364,14 @@ class CNSALROIHeads(ROIHeads):
         del targets
 
         if self.training:
-            predictions, losses = self._forward_box(features, proposals)
+            predictions, losses = self._forward_box(features, proposals, supervised)
             # Usually the original proposals used by the box head are used by the mask, keypoint
             # heads. But when `self.train_on_pred_boxes is True`, proposals will contain boxes
             # predicted by the box head.
             if supervised:
                 losses.update(self._forward_mask(features, proposals))
                 losses.update(self._forward_keypoint(features, proposals))
-            return proposals, losses
+            return predictions, losses
         else:
             pred_instances = self._forward_box(features, proposals)
             # During inference cascaded prediction is used: the mask and keypoints heads are only

@@ -4,6 +4,33 @@ from src.data import al_label_transfer
 from src.scores import al_scoring
 
 
+def cns_testing_0512():
+    cfg = config.get_cfg_for_cns(**setup.cns_test)
+    d2_mask.train_model_only_cns(
+        output_folder="0512_cns",
+        regist_instances=True,
+        cfg=cfg,
+    )
+
+
+def cns_control_0511():
+    cfg = config.get_cfg_for_cns(**setup.cns_control)
+    d2_mask.train_model_only_cns(
+        output_folder="0511_control_cns",
+        regist_instances=True,
+        cfg=cfg,
+    )
+
+
+def al_control_0511():
+    cfg = config.get_cfg_for_al(**setup.al_control)
+    d2_mask.train_model_only(
+        output_folder="0511_control_al",
+        regist_instances=True,
+        cfg=cfg,
+    )
+
+
 def regular_mask_rcnn_training_0511():
     logger, _ = d2_mask.startup(
         regist_instances=True, cfg=None, logfile="0511_A12_patch_vanilla"

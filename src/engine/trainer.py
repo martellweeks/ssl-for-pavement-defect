@@ -6,6 +6,7 @@ from typing import Dict
 
 import numpy as np
 import torch
+from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.data import DatasetMapper, MetadataCatalog, build_detection_test_loader
 from detectron2.engine import (
     DefaultTrainer,
@@ -104,6 +105,12 @@ class CNSTrainerManager(DefaultTrainer):
         self.start_iter = 0
         self.max_iter = cfg.SOLVER.MAX_ITER
         self.cfg = cfg
+        self.checkpointer = DetectionCheckpointer(
+            # Assume you want to save checkpoints together with logs/statistics
+            model,
+            cfg.OUTPUT_DIR,
+            trainer=weakref.proxy(self),
+        )
 
         self.register_hooks(self.build_hooks())
 

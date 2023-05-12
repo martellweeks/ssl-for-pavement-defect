@@ -247,6 +247,8 @@ class CNSGeneralizedRCNN(GeneralizedRCNN):
         allowed images - visualize this one.
         """
 
+        return False
+
         if not global_cfg.VIS_TEST:  # Visualization is disabled in config
             return False
 

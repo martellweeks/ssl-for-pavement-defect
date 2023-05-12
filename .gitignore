@@ -13,9 +13,12 @@ notebooks/.ipynb_checkpoints
 models/*
 !models/.gitkeep
 
+test/*
+
 __pycache__
 
 log_*
+*.log
 
 output/*
 
