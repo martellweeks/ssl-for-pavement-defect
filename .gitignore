@@ -13,9 +13,14 @@ notebooks/.ipynb_checkpoints
 models/*
 !models/.gitkeep
 
-test/*
+tests/*
 eval/*
 plots/*
+!tests/.gitkeep
+!eval/.gitkeep
+!plots/.gitkeep
+!plots/*.ipynb
+!plots/*.png
 
 __pycache__
 

@@ -1,5 +1,0 @@
-opencv-python
-glob
-pandas
-scikit-learn
-tqdm
