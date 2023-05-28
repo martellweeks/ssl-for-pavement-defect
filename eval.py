@@ -1,14 +1,84 @@
 from config import config, paths, setup
+from src.controller import d2_mask
 from src.data import al_label_transfer
-from src.model import d2_mask
 from src.scores import al_scoring
 
 if __name__ == "__main__":
-    d2_mask.predict_scores(
-        model_weights="output/A14_L2/0414_init_score/model_final.pth",
-        output_path="./tests",
+    # d2_mask.predict_scores(
+    #     model_weights="output/A14_L2/0414_init_score/model_final.pth",
+    #     output_path="./tests",
+    #     regist_instances=True,
+    #     test_anns_file="./data/annotations/A14_L2/quick_test.json",
+    # )
+
+    # d2_mask.get_coco_eval_results_cns(
+    #     model_weights="output/exp_0519/exp_0519_long_cns_bigbatch/model_0001999.pth",
+    #     regist_instances=True,
+    #     output_path="./eval/exp_0519/exp_0519_long_cns_bigbatch/model_0001999",
+    #     cfg=config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch),
+    # )
+
+    # d2_mask.get_coco_eval_results_cns(
+    #     model_weights="output/exp_0519/exp_0519_long_cns_bigbatch/model_0003999.pth",
+    #     regist_instances=True,
+    #     output_path="./eval/exp_0519/exp_0519_long_cns_bigbatch/model_0003999",
+    #     cfg=config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch),
+    # )
+
+    # d2_mask.get_coco_eval_results_cns(
+    #     model_weights="output/exp_0519/exp_0519_long_cns_bigbatch/model_0005999.pth",
+    #     regist_instances=False,
+    #     output_path="./eval/exp_0519/exp_0519_long_cns_bigbatch/model_0005999",
+    #     cfg=config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch),
+    # )
+
+    # d2_mask.get_coco_eval_results_cns(
+    #     model_weights="output/exp_0519/exp_0519_long_cns_bigbatch/model_0007999.pth",
+    #     regist_instances=False,
+    #     output_path="./eval/exp_0519/exp_0519_long_cns_bigbatch/model_0007999",
+    #     cfg=config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch),
+    # )
+
+    # d2_mask.get_coco_eval_results_cns(
+    #     model_weights="output/exp_0519/exp_0519_long_cns_bigbatch/model_0009999.pth",
+    #     regist_instances=False,
+    #     output_path="./eval/exp_0519/exp_0519_long_cns_bigbatch/model_0009999",
+    #     cfg=config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch),
+    # )
+
+    d2_mask.get_coco_eval_results(
+        model_weights="output/exp_0519/exp_0519_long_vanilla_bigbatch/model_0001999.pth",
         regist_instances=True,
-        test_anns_file="./data/annotations/A14_L2/quick_test.json",
+        output_path="./test/exp_0519/exp_0519_long_vanilla_bigbatch/model_0001999",
+        cfg=config.get_cfg_for_al(**setup.exp_0519_long_vanilla_bigbatch),
+    )
+
+    d2_mask.get_coco_eval_results(
+        model_weights="output/exp_0519/exp_0519_long_vanilla_bigbatch/model_0003999.pth",
+        regist_instances=False,
+        output_path="./test/exp_0519/exp_0519_long_vanilla_bigbatch/model_0003999",
+        cfg=config.get_cfg_for_al(**setup.exp_0519_long_vanilla_bigbatch),
+    )
+
+    d2_mask.get_coco_eval_results(
+        model_weights="output/exp_0519/exp_0519_long_vanilla_bigbatch/model_0005999.pth",
+        regist_instances=False,
+        output_path="./test/exp_0519/exp_0519_long_vanilla_bigbatch/model_0005999",
+        cfg=config.get_cfg_for_al(**setup.exp_0519_long_vanilla_bigbatch),
+    )
+
+    d2_mask.get_coco_eval_results(
+        model_weights="output/exp_0519/exp_0519_long_vanilla_bigbatch/model_0007999.pth",
+        regist_instances=False,
+        output_path="./test/exp_0519/exp_0519_long_vanilla_bigbatch/model_0007999",
+        cfg=config.get_cfg_for_al(**setup.exp_0519_long_vanilla_bigbatch),
+    )
+
+    d2_mask.get_coco_eval_results(
+        model_weights="output/exp_0519/exp_0519_long_vanilla_bigbatch/model_0009999.pth",
+        regist_instances=False,
+        output_path="./test/exp_0519/exp_0519_long_vanilla_bigbatch/model_0009999",
+        cfg=config.get_cfg_for_al(**setup.exp_0519_long_vanilla_bigbatch),
     )
 
     # update_image_list = al_label_transfer.get_random_n_images(
