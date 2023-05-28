@@ -19,7 +19,7 @@ train_anns_path = os.path.join(project_path, train_anns_filename)
 val_anns_path = os.path.join(project_path, val_anns_filename)
 test_anns_path = os.path.join(project_path, test_anns_filename)
 
-output_path = os.path.join(project_path, "output/A14_L2")
+output_path = os.path.join(project_path, "output/")
 final_model_filename = "output"
 final_model_path = os.path.join(project_path, "models")
 final_model_full_path = os.path.join(project_path, "models/output.pth")
