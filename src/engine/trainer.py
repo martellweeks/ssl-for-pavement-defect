@@ -208,7 +208,7 @@ class CNSTrainer(SimpleTrainer):
             + loss_dict["unsup_cns_loss_box_reg"]
         )
         losses = (
-            losses_sup + losses_al + self.solver_cns_loss_weight * losses_cns
+            losses_sup + self.solver_cns_loss_weight * losses_cns
         )  # Calculate the total loss
 
         self.optimizer.zero_grad()

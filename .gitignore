@@ -14,6 +14,8 @@ models/*
 !models/.gitkeep
 
 test/*
+eval/*
+plots/*
 
 __pycache__
 

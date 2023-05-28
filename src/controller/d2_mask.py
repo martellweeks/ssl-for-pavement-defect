@@ -76,7 +76,15 @@ def train(output_folder: str = None, cfg: CfgNode = None):
     logger.info("Final model saved")
 
 
-def train_vanilla_mrcnn(output_folder: str = None, cfg: CfgNode = None, logger=None):
+def train_vanilla_mrcnn(
+    output_folder: str = None,
+    model_weights: str = None,
+    regist_instances: bool = True,
+    logfile: str = "vanilla",
+    cfg: CfgNode = None,
+):
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg, logfile=logfile)
+
     if output_folder is not None:
         cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, output_folder)
 
@@ -100,9 +108,10 @@ def train_model_only_cns(
     output_folder: str = None,
     model_weights: str = None,
     regist_instances: bool = True,
+    logfile: str = "cns",
     cfg: CfgNode = None,
 ):
-    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg, logfile="cns")
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg, logfile=logfile)
 
     if output_folder is not None:
         cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, output_folder)

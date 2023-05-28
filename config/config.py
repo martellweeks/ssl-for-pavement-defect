@@ -75,7 +75,9 @@ def get_cfg_for_cns(
     train_dataset: str = "train",
     unlabeled_dataset: str = "test",
     test_dataset: str = "val",
-    ims_per_batch: int = 3,
+    ims_per_batch: int = 2,
+    ims_per_batch_labeled: int = 1,
+    ims_per_batch_unlabeled: int = 1,
     base_lr: int = 0.001,
     warmup_iters: int = 200,
     model_weights: str = None,
@@ -144,8 +146,8 @@ def get_cfg_for_cns(
     ### Solver parameters
     # Note: with CNS enabled, the "effective" batch size (in terms of memory used) is twice larger as images get flipped
     cfg.SOLVER.IMS_PER_BATCH = ims_per_batch
-    cfg.SOLVER.IMS_PER_BATCH_LABELED = 1
-    cfg.SOLVER.IMS_PER_BATCH_UNLABELED = 2
+    cfg.SOLVER.IMS_PER_BATCH_LABELED = ims_per_batch_labeled
+    cfg.SOLVER.IMS_PER_BATCH_UNLABELED = ims_per_batch_unlabeled
 
     # CNS weight scheduling parameters (see their supplementary)
     # Note that here we change the notationn - T0 defines the number of iterations until the weight is zero,

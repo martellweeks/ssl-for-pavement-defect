@@ -4,11 +4,32 @@ from src.data import al_label_transfer
 from src.scores import al_scoring
 
 
-def cns_testing_0512():
-    cfg = config.get_cfg_for_cns(**setup.cns_test)
+def cns_control_0519():
+    cfg = config.get_cfg_for_cns(**setup.cns_control)
     d2_mask.train_model_only_cns(
-        output_folder="0512_cns",
+        output_folder="0519_cns_control",
         regist_instances=True,
+        logfile="0519_cns_control",
+        cfg=cfg,
+    )
+
+
+def cns_exp_0519():
+    cfg = config.get_cfg_for_cns(**setup.cns_exp)
+    d2_mask.train_model_only_cns(
+        output_folder="0519_cns_exp",
+        regist_instances=True,
+        logfile="0519_cns_exp",
+        cfg=cfg,
+    )
+
+
+def cns_exp_0519_2():
+    cfg = config.get_cfg_for_cns(**setup.cns_exp2)
+    d2_mask.train_model_only_cns(
+        output_folder="0519_cns_exp2",
+        regist_instances=True,
+        logfile="0519_cns_exp2",
         cfg=cfg,
     )
 
@@ -27,6 +48,16 @@ def al_control_0511():
     d2_mask.train_model_only(
         output_folder="0511_control_al",
         regist_instances=True,
+        cfg=cfg,
+    )
+
+
+def vanilla_control_0519():
+    cfg = config.get_cfg_for_al(**setup.al_control)
+    d2_mask.train_vanilla_mrcnn(
+        output_folder="0519_control_vanilla",
+        regist_instances=True,
+        logfile="0519_control_vanilla",
         cfg=cfg,
     )
 
@@ -246,3 +277,56 @@ def exp_0324(mode: str = "AL"):
             output_path="./output/0414_labels",
             output_file_tag=f"{it+1}",
         )
+
+
+# Experiments for 0519 CNS final verification
+
+
+def exp_0519_long_cns_base():
+    cfg = config.get_cfg_for_cns(**setup.exp_0519_long_cns_base)
+    d2_mask.train_model_only_cns(
+        output_folder="exp_0519/exp_0519_long_cns_base",
+        regist_instances=True,
+        logfile="exp_0519_long_cns_base",
+        cfg=cfg,
+    )
+
+
+def exp_0519_long_cns_bigbatch():
+    cfg = config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch)
+    d2_mask.train_model_only_cns(
+        output_folder="exp_0519/exp_0519_long_cns_bigbatch",
+        regist_instances=True,
+        logfile="exp_0519_long_cns_bigbatch",
+        cfg=cfg,
+    )
+
+
+def exp_0519_long_vanilla():
+    cfg = config.get_cfg_for_al(**setup.exp_0519_long_vanilla)
+    d2_mask.train_vanilla_mrcnn(
+        output_folder="exp_0519/exp_0519_long_vanilla",
+        regist_instances=True,
+        logfile="exp_0519_long_vanilla",
+        cfg=cfg,
+    )
+
+
+def exp_0519_long_vanilla_bigbatch():
+    cfg = config.get_cfg_for_al(**setup.exp_0519_long_vanilla_bigbatch)
+    d2_mask.train_vanilla_mrcnn(
+        output_folder="exp_0519/exp_0519_long_vanilla_bigbatch",
+        regist_instances=True,
+        logfile="exp_0519_long_vanilla_bigbatch",
+        cfg=cfg,
+    )
+
+
+def exp_0519_long_cns_bigbatch_wronglabels():
+    cfg = config.get_cfg_for_cns(**setup.exp_0519_long_cns_bigbatch)
+    d2_mask.train_model_only_cns(
+        output_folder="exp_0519/exp_0519_long_cns_bigbatch_wronglabels",
+        regist_instances=True,
+        logfile="exp_0519_long_cns_bigbatch_wronglabels",
+        cfg=cfg,
+    )
