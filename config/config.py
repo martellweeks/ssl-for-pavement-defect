@@ -8,6 +8,66 @@ from detectron2.config import get_cfg
 from config import paths
 
 
+def get_cfg_for_vanilla(
+    train_dataset: str = "train",
+    ims_per_batch: int = 5,
+    base_lr: int = 0.001,
+    warmup_iters: int = 200,
+    model_weights: str = None,
+    num_decays: int = 4,
+    steps: tuple = (400, 500, 600, 700),
+    gamma: float = 0.2,
+    max_iter: int = 1000,
+    eval_period: int = 200,
+    checkpoint_period: int = 1000,
+):
+    assert len(steps) == num_decays
+
+    cfg = get_cfg()
+
+    cfg.merge_from_file(
+        model_zoo.get_config_file(
+            "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
+        )
+    )
+
+    cfg.DATASETS.TRAIN = (train_dataset,)
+    cfg.DATASETS.TEST = ("val",)
+    cfg.DATALOADER.NUM_WORKERS = 2  # Dataloader workers
+
+    cfg.MODEL.WEIGHTS = (  # Model weights
+        model_weights
+        if model_weights is not None
+        else model_zoo.get_checkpoint_url(
+            "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
+        )
+    )
+
+    cfg.SOLVER.IMS_PER_BATCH = ims_per_batch  # Images per batch
+    cfg.SOLVER.BASE_LR = base_lr  # Base learning rate
+    cfg.SOLVER.MAX_ITER = max_iter  # Max iteration
+    cfg.SOLVER.STEPS = steps  # Steps on decaying lr
+    cfg.SOLVER.WARMUP_ITERS = warmup_iters
+    cfg.SOLVER.NUM_DECAYS = num_decays  # Total lr decay
+    cfg.SOLVER.GAMMA = gamma  # Decay to gamma times previous lr
+    cfg.SOLVER.CHECKPOINT_PERIOD = (
+        checkpoint_period  # Save checkpoint every n iterations
+    )
+
+    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 256
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 14
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
+    cfg.MODEL.MASK_ON = True  # Mask on
+
+    cfg.OUTPUT_DIR = paths.output_path
+
+    cfg.TEST.EVAL_PERIOD = eval_period
+
+    cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+    return cfg
+
+
 def get_cfg_for_al(
     train_dataset: str = "train",
     ims_per_batch: int = 5,
@@ -92,6 +152,7 @@ def get_cfg_for_cns(
     cns_w_t1: int = 5000,
     cns_w_t2: int = 6000,
     cns_w_t: int = 18000,
+    train_al: bool = True,
 ):
     assert len(steps) == num_decays
 
@@ -164,6 +225,8 @@ def get_cfg_for_cns(
     cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T2 = cns_w_t2
     # Note: even though `T` represents the total number of iterations, it's safe to continue training after `T` iters
     cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T = cns_w_t
+
+    cfg.SOLVER.TRAIN_AL_SCORING_MODULES = train_al
 
     cfg.DATASETS.TRAIN = (
         train_dataset,

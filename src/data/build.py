@@ -58,7 +58,7 @@ def build_ss_train_loader(cfg, mapper):
     # Log the datasets sizes
     if comm.is_main_process():
         logger = setup_logger(name=__name__)
-        logger.debug(
+        logger.info(
             "Number of images in the labeled and unlabeled datasets: {}, {}".format(
                 len(labeled_dataset_dicts), len(unlabeled_dataset_dicts)
             )
@@ -366,7 +366,7 @@ def build_detection_train_loader(cfg):
 
     if comm.is_main_process():  # Log counts
         logger = setup_logger(name=__name__)
-        logger.debug("Number of images in the dataset: {}".format(len(dataset)))
+        logger.info("Number of images in the dataset: {}".format(len(dataset)))
         _log_api_usage("dataset." + cfg.DATASETS.TRAIN[0])
 
     # Original code

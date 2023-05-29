@@ -10,7 +10,7 @@ test_data_path = os.path.join(project_path, "data/A14_L2")
 
 raw_anns_filename = "data/annotations/A14_L2/raw.json"
 train_anns_filename = "data/annotations/A14_L2/train.json"
-val_anns_filename = "data/annotations/A14_L2/train.json"
+val_anns_filename = "data/annotations/A14_L2/quick_test.json"
 test_anns_filename = "data/annotations/A14_L2/test.json"
 metadata_filename = "data/annotations/A14_L2/metadata.json"
 

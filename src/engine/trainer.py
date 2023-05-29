@@ -93,12 +93,14 @@ class CNSTrainerManager(DefaultTrainer):
             self._trainer.solver_cns_t1,
             self._trainer.solver_cns_t2,
             self._trainer.solver_cns_t,
+            self._trainer.solver_train_al_scoring_modules,
         ) = (
             cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_BETA,
             cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T0,
             cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T1,
             cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T2,
             cfg.SOLVER.CNS_WEIGHT_SCHEDULE_RAMP_T,
+            cfg.SOLVER.TRAIN_AL_SCORING_MODULES,
         )
 
         self.scheduler = self.build_lr_scheduler(cfg, optimizer)
@@ -210,12 +212,16 @@ class CNSTrainer(SimpleTrainer):
         losses = (
             losses_sup + self.solver_cns_loss_weight * losses_cns
         )  # Calculate the total loss
+        if self.solver_train_al_scoring_modules:
+            losses += losses_al
 
         self.optimizer.zero_grad()
         losses.backward()
 
         # Log metrics
-        self._write_metrics(loss_dict, data_time)
+        self._write_metrics(
+            loss_dict, data_time, train_al=self.solver_train_al_scoring_modules
+        )
 
         # Backprop
         self.optimizer.step()
@@ -266,6 +272,7 @@ class CNSTrainer(SimpleTrainer):
         loss_dict: Dict[str, torch.Tensor],
         data_time: float,
         prefix: str = "",
+        train_al: bool = True,
     ):
         """
         Args:
@@ -319,7 +326,13 @@ class CNSTrainer(SimpleTrainer):
                 + metrics_dict["unsup_cns_loss_box_reg"]
             ) * self.solver_cns_loss_weight
             storage.put_scalar("total_cns_loss", cns_loss)  # Sum of the CNS losses
+            al_loss = 0
+            if train_al:
+                al_loss = (
+                    metrics_dict["loss_box_score"] + metrics_dict["loss_mask_score"]
+                )
+                storage.put_scalar("total_score_loss", al_loss)
             storage.put_scalar(  # Sum of all losses
                 "total_all_loss",
-                total_sup_loss + cns_loss,
+                total_sup_loss + cns_loss + al_loss,
             )

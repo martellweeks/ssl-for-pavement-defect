@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from config import config, paths, setup
-from src.controller import d2_mask
+from src.controller import cas, d2_mask
 from src.data import al_label_transfer
 from src.scores import al_scoring
 
@@ -330,3 +332,234 @@ def exp_0519_long_cns_bigbatch_wronglabels():
         logfile="exp_0519_long_cns_bigbatch_wronglabels",
         cfg=cfg,
     )
+
+
+# Experiments for full pipeline
+
+
+def exp_0528_cns(mode: str = "CNS", iter: int = 10, train_from_init: bool = True):
+    """
+    Experiment on May 28
+    Testing the full pipeline with CAS: CNS + AL
+    """
+
+    use_cns = True
+    use_al = True
+
+    if mode == "AL" or mode == "vanilla":
+        use_cns = False
+
+    if mode == "CNS" or mode == "vanilla":
+        use_al = False
+
+    logger, _ = d2_mask.startup(
+        regist_instances=True, logfile=f"exp_0528_{datetime.now()}", cfg=None
+    )
+
+    # if train_from_init:
+    #     cas.train_model(
+    #         output_folder="0528_cns/weights/init_model",
+    #         regist_instances=False,
+    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
+    #     )
+    #     cas.coco_eval(
+    #         model_weights=paths.final_model_full_path,
+    #         regist_instances=False,
+    #         output_path="./output/0528_cns/init_model",
+    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+    #     )
+    #     cas.train_score(
+    #         output_folder="0528_cns/weights/init_score",
+    #         regist_instances=False,
+    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
+    #         model_weights=paths.final_model_full_path
+    #     )
+
+    if mode == "CAS" or mode == "AL":
+        update_image_list = cas.sample_al_sets(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path="./output/0528_cns/init_score",
+            test_anns_file="./data/annotations/A14_L2/test.json",
+            no_img=40,
+        )
+    else:
+        update_image_list = cas.sample_rand_sets(
+            test_anns_file="./data/annotations/A14_L2/test.json",
+            no_img=40,
+        )
+
+    cas.transfer_labels(
+        train_anns_file="./data/annotations/A14_L2/train.json",
+        test_anns_file="./data/annotations/A14_L2/test.json",
+        image_list=update_image_list,
+        output_path="./output/0528_cns/labels",
+        output_file_tag=0,
+    )
+
+    for it in range(iter):
+        cas.register_new_labels(
+            train_anns_file=f"./output/0528_cns/labels/train_{it}.json",
+            test_anns_file=f"./output/0528_cns/labels/test_{it}.json",
+            iter_tag=it,
+        )
+        cas.train_model(
+            output_folder=f"0528_cns/weights/model_{it}",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(
+                train_dataset=f"train_{it}",
+                unlabeled_dataset=f"test_{it}",
+                **setup.exp_0528_cns_model_cycle,
+            ),
+            model_weights=paths.final_model_full_path,
+        )
+        cas.coco_eval(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path=f"./output/0528_cns/model_{it}",
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+        )
+        cas.train_score(
+            output_folder=f"0528_cns/weights/score_{it}",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(
+                train_dataset=f"train_{it}",
+                unlabeled_dataset=f"test_{it}",
+                **setup.exp_0528_cns_scores_cycle,
+            ),
+            model_weights=paths.final_model_full_path,
+        )
+
+        if mode == "CAS" or mode == "AL":
+            update_image_list = cas.sample_al_sets(
+                model_weights=paths.final_model_full_path,
+                regist_instances=False,
+                output_path=f"./output/0528_cns/score_{it}",
+                test_anns_file=f"./output/0528_cns/labels/test_{it}.json",
+            )
+        else:
+            update_image_list = cas.sample_rand_sets(
+                test_anns_file=f"./output/0528_cns/labels/test_{it}.json",
+            )
+
+        cas.transfer_labels(
+            train_anns_file=f"./output/0528_cns/labels/train_{it}.json",
+            test_anns_file=f"./output/0528_cns/labels/test_{it}.json",
+            image_list=update_image_list,
+            output_path="./output/0528_cns/labels",
+            output_file_tag=it + 1,
+        )
+
+
+def exp_0528_cas(mode: str = "CAS", iter: int = 10, train_from_init: bool = True):
+    """
+    Experiment on May 28
+    Testing the full pipeline with CAS: CNS + AL
+    """
+
+    use_cns = True
+    use_al = True
+
+    if mode == "AL" or mode == "vanilla":
+        use_cns = False
+
+    if mode == "CNS" or mode == "vanilla":
+        use_al = False
+
+    logger, _ = d2_mask.startup(
+        regist_instances=True, logfile=f"exp_0528_{datetime.now()}", cfg=None
+    )
+
+    # if train_from_init:
+    #     cas.train_model(
+    #         output_folder="0528_cas/weights/init_model",
+    #         regist_instances=False,
+    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
+    #     )
+    #     cas.coco_eval(
+    #         model_weights=paths.final_model_full_path,
+    #         regist_instances=False,
+    #         output_path="./output/0528_cas/init_model",
+    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+    #     )
+    #     cas.train_score(
+    #         output_folder="0528_cas/weights/init_score",
+    #         regist_instances=False,
+    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
+    #         model_weights=paths.final_model_full_path
+    #     )
+
+    if mode == "CAS" or mode == "AL":
+        update_image_list = cas.sample_al_sets(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path="./output/0528_cas/init_score",
+            test_anns_file="./data/annotations/A14_L2/test.json",
+            no_img=40,
+        )
+    else:
+        update_image_list = cas.sample_rand_sets(
+            test_anns_file="./data/annotations/A14_L2/test.json",
+            no_img=40,
+        )
+
+    cas.transfer_labels(
+        train_anns_file="./data/annotations/A14_L2/train.json",
+        test_anns_file="./data/annotations/A14_L2/test.json",
+        image_list=update_image_list,
+        output_path="./output/0528_cas/labels",
+        output_file_tag=0,
+    )
+
+    for it in range(iter):
+        cas.register_new_labels(
+            train_anns_file=f"./output/0528_cas/labels/train_{it}.json",
+            test_anns_file=f"./output/0528_cas/labels/test_{it}.json",
+            iter_tag=it,
+        )
+        cas.train_model(
+            output_folder=f"0528_cas/weights/model_{it}",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(
+                train_dataset=f"train_{it}",
+                unlabeled_dataset=f"test_{it}",
+                **setup.exp_0528_cns_model_cycle,
+            ),
+            model_weights=paths.final_model_full_path,
+        )
+        cas.coco_eval(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path=f"./output/0528_cas/model_{it}",
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+        )
+        cas.train_score(
+            output_folder=f"0528_cas/weights/score_{it}",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(
+                train_dataset=f"train_{it}",
+                unlabeled_dataset=f"test_{it}",
+                **setup.exp_0528_cns_scores_cycle,
+            ),
+            model_weights=paths.final_model_full_path,
+        )
+
+        if mode == "CAS" or mode == "AL":
+            update_image_list = cas.sample_al_sets(
+                model_weights=paths.final_model_full_path,
+                regist_instances=False,
+                output_path=f"./output/0528_cas/score_{it}",
+                test_anns_file=f"./output/0528_cas/labels/test_{it}.json",
+            )
+        else:
+            update_image_list = cas.sample_rand_sets(
+                test_anns_file=f"./output/0528_cas/labels/test_{it}.json",
+            )
+
+        cas.transfer_labels(
+            train_anns_file=f"./output/0528_cas/labels/train_{it}.json",
+            test_anns_file=f"./output/0528_cas/labels/test_{it}.json",
+            image_list=update_image_list,
+            output_path="./output/0528_cas/labels",
+            output_file_tag=it + 1,
+        )
