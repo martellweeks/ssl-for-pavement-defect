@@ -352,3 +352,100 @@ exp_0528_cns_prediction = {
     "cns_w_t": 90000,
     "train_al": True,
 }
+
+exp_0528_al_model_init = {
+    "ims_per_batch": 4,
+    "base_lr": 0.001,
+    "warmup_iters": 200,
+    "model_weights": None,
+    "num_decays": 4,
+    "steps": (1000, 2000, 3000, 4000),
+    "gamma": 0.2,
+    "max_iter": 5000,
+    "eval_period": 10000,
+    "checkpoint_period": 5000,
+}
+
+exp_0528_al_scores_init = {
+    "ims_per_batch": 1,
+    "base_lr": 0.00001,
+    "warmup_iters": 200,
+    "model_weights": None,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 5000,
+    "checkpoint_period": 5000,
+    "eval_period": 10000,
+}
+
+exp_0528_al_model_cycle = {
+    "ims_per_batch": 4,
+    "base_lr": 0.0001,
+    "warmup_iters": 100,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 1500,
+    "eval_period": 10000,
+    "checkpoint_period": 1500,
+}
+
+exp_0528_al_scores_cycle = {
+    "ims_per_batch": 1,
+    "base_lr": 0.00001,
+    "warmup_iters": 100,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 2000,
+    "eval_period": 3000,
+}
+
+exp_0528_al_prediction = {
+    "ims_per_batch": 1,
+    "base_lr": 0.00001,
+    "warmup_iters": 100,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 2000,
+    "eval_period": 3000,
+}
+
+
+exp_0528_vanilla_model_init = {
+    "ims_per_batch": 4,
+    "base_lr": 0.001,
+    "warmup_iters": 200,
+    "model_weights": None,
+    "num_decays": 4,
+    "steps": (1000, 2000, 3000, 4000),
+    "gamma": 0.2,
+    "max_iter": 5000,
+    "eval_period": 10000,
+    "checkpoint_period": 5000,
+}
+
+exp_0528_vanilla_model_cycle = {
+    "ims_per_batch": 4,
+    "base_lr": 0.0001,
+    "warmup_iters": 100,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 1500,
+    "eval_period": 10000,
+    "checkpoint_period": 1500,
+}
+
+exp_0528_vanilla_prediction = {
+    "ims_per_batch": 1,
+    "base_lr": 0.00001,
+    "warmup_iters": 100,
+    "num_decays": 0,
+    "steps": (),
+    "gamma": 0.2,
+    "max_iter": 2000,
+    "eval_period": 3000,
+}

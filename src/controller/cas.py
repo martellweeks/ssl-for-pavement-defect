@@ -102,6 +102,31 @@ def sample_al_sets(
     )
 
 
+def sample_alpl_sets(
+    model_weights: str = None,
+    regist_instances: bool = True,
+    output_path: str = None,
+    test_anns_file: str = None,
+    no_img: int = 40,
+) -> list:
+    d2_mask.predict_scores(
+        model_weights=model_weights,
+        output_path=output_path,
+        regist_instances=regist_instances,
+        test_anns_file=test_anns_file,
+    )
+
+    al_scoring.calculate_al_score(
+        file_path=os.path.join(output_path, "loss_predictions.csv"),
+        output_path=output_path,
+    )
+
+    return al_scoring.get_alpl_n_images(
+        score_file_path=os.path.join(output_path, "al_score.csv"),
+        no_img=no_img,
+    )
+
+
 def sample_rand_sets(test_anns_file: str = None, no_img: int = 40) -> list:
     return al_label_transfer.get_random_n_images(
         test_anns_file=test_anns_file, no_img=no_img

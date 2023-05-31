@@ -62,3 +62,14 @@ def get_top_n_images(score_file_path: str, no_img: int = 10):
 
     image_list = data.iloc[:no_img, 2]
     return image_list.values.tolist()
+
+
+def get_alpl_n_images(score_file_path: str, no_img: int = 10):
+    data = pd.read_csv(score_file_path)
+    data["box loss"].replace("", np.nan, inplace=True)
+    data.dropna(subset=["box loss"], inplace=True)
+
+    half_nos = int(no_img / 2)
+    al_list = data.iloc[:half_nos, 2]
+    pl_list = data.iloc[-(no_img - half_nos) :, 2]
+    return al_list.values.tolist() + pl_list.values.tolist()

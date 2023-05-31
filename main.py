@@ -3,7 +3,7 @@ from scripts import experiments
 from src.controller import d2_mask
 
 if __name__ == "__main__":
-    experiments.exp_0528_cas()
+    experiments.exp_0528_al()
     # experiments.exp_0519_long_cns_bigbatch_wronglabels()
 
     # d2_mask.get_coco_eval_results_cns(

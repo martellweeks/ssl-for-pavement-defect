@@ -90,6 +90,9 @@ def train_vanilla_mrcnn(
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
+    if model_weights is not None:
+        cfg.MODEL.WEIGHTS = model_weights
+
     cfg.MODEL.ROI_HEADS.NAME = "StandardROIHeads"
 
     trainer = BaseTrainer(cfg)
@@ -99,7 +102,9 @@ def train_vanilla_mrcnn(
     trainer.train()
 
     logger.info("Training completed")
-    checkpointer = DetectionCheckpointer(trainer.model, save_dir=cfg.OUTPUT_DIR)
+    if os.path.exists(paths.final_model_full_path):
+        os.remove(paths.final_model_full_path)
+    checkpointer = DetectionCheckpointer(trainer.model, save_dir=paths.final_model_path)
     checkpointer.save(paths.final_model_filename)
     logger.info("Final model saved")
 
@@ -159,9 +164,10 @@ def train_model_only(
     output_folder: str = None,
     model_weights: str = None,
     regist_instances: bool = True,
+    logfile: str = "al",
     cfg: CfgNode = None,
 ):
-    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg, logfile="al")
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg, logfile=logfile)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
 
@@ -309,9 +315,10 @@ def train_scores_only(
     output_folder: str = None,
     model_weights: str = None,
     regist_instances: bool = True,
+    logfile: str = "al",
     cfg: CfgNode = None,
 ):
-    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg, logfile=logfile)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
 
@@ -725,7 +732,7 @@ def label_predictions_on_images(
         )
 
 
-def get_coco_eval_results(
+def get_coco_eval_results_al(
     model_weights: str,
     regist_instances: bool = True,
     test_data_tag: str = "test",
@@ -735,6 +742,33 @@ def get_coco_eval_results(
     logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
 
     cfg.MODEL.ROI_HEADS.NAME = "ALScoringROIHeads"
+    cfg.MODEL.WEIGHTS = model_weights
+    cfg.DATASETS.TEST = (test_data_tag,)
+
+    os.makedirs(output_path, exist_ok=True)
+
+    predictor = DefaultPredictor(cfg)
+
+    evaluator = COCOEvaluator("test", cfg, False, output_dir=output_path)
+    val_loader = build_detection_test_loader(cfg, "test")
+
+    logger.info("Running COCO evaluation on test dataset with current model")
+
+    with open(os.path.join(output_path, "COCO_metrics_evaluation.json"), "w") as f:
+        json.dump(inference_on_dataset(predictor.model, val_loader, evaluator), f)
+
+    logger.info("File saved")
+
+
+def get_coco_eval_results_vanilla(
+    model_weights: str,
+    regist_instances: bool = True,
+    test_data_tag: str = "test",
+    output_path: str = "./output/",
+    cfg: CfgNode = None,
+):
+    logger, cfg = startup(regist_instances=regist_instances, cfg=cfg)
+
     cfg.MODEL.WEIGHTS = model_weights
     cfg.DATASETS.TEST = (test_data_tag,)
 
