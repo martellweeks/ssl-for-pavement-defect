@@ -356,24 +356,24 @@ def exp_0528_cns(mode: str = "CNS", iter: int = 10, train_from_init: bool = True
         regist_instances=True, logfile=f"exp_0528_{datetime.now()}", cfg=None
     )
 
-    # if train_from_init:
-    #     cas.train_model(
-    #         output_folder="0528_cns/weights/init_model",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
-    #     )
-    #     cas.coco_eval(
-    #         model_weights=paths.final_model_full_path,
-    #         regist_instances=False,
-    #         output_path="./output/0528_cns/init_model",
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
-    #     )
-    #     cas.train_score(
-    #         output_folder="0528_cns/weights/init_score",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
-    #         model_weights=paths.final_model_full_path
-    #     )
+    if train_from_init:
+        cas.train_model(
+            output_folder="0528_cns/weights/init_model",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
+        )
+        cas.coco_eval(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path="./output/0528_cns/init_model",
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+        )
+        cas.train_score(
+            output_folder="0528_cns/weights/init_score",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
+            model_weights=paths.final_model_full_path
+        )
 
     if mode == "CAS" or mode == "AL":
         update_image_list = cas.sample_al_sets(
@@ -472,24 +472,24 @@ def exp_0528_cas(mode: str = "CAS", iter: int = 10, train_from_init: bool = True
         regist_instances=True, logfile=f"exp_0528_{datetime.now()}", cfg=None
     )
 
-    # if train_from_init:
-    #     cas.train_model(
-    #         output_folder="0528_cas/weights/init_model",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
-    #     )
-    #     cas.coco_eval(
-    #         model_weights=paths.final_model_full_path,
-    #         regist_instances=False,
-    #         output_path="./output/0528_cas/init_model",
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
-    #     )
-    #     cas.train_score(
-    #         output_folder="0528_cas/weights/init_score",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
-    #         model_weights=paths.final_model_full_path
-    #     )
+    if train_from_init:
+        cas.train_model(
+            output_folder="0528_cas/weights/init_model",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
+        )
+        cas.coco_eval(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path="./output/0528_cas/init_model",
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+        )
+        cas.train_score(
+            output_folder="0528_cas/weights/init_score",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
+            model_weights=paths.final_model_full_path
+        )
 
     if mode == "CAS" or mode == "AL":
         update_image_list = cas.sample_al_sets(
@@ -588,24 +588,24 @@ def exp_0528_caspl(mode: str = "CAS", iter: int = 10, train_from_init: bool = Tr
         regist_instances=True, logfile=f"exp_0528_caspl_{datetime.now()}", cfg=None
     )
 
-    # if train_from_init:
-    #     cas.train_model(
-    #         output_folder="0528_caspl/weights/init_model",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
-    #     )
-    #     cas.coco_eval(
-    #         model_weights=paths.final_model_full_path,
-    #         regist_instances=False,
-    #         output_path="./output/0528_caspl/init_model",
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
-    #     )
-    #     cas.train_score(
-    #         output_folder="0528_caspl/weights/init_score",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
-    #         model_weights=paths.final_model_full_path
-    #     )
+    if train_from_init:
+        cas.train_model(
+            output_folder="0528_caspl/weights/init_model",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_model_init),
+        )
+        cas.coco_eval(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path="./output/0528_caspl/init_model",
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_prediction),
+        )
+        cas.train_score(
+            output_folder="0528_caspl/weights/init_score",
+            regist_instances=False,
+            cfg=config.get_cfg_for_cns(**setup.exp_0528_cns_scores_init),
+            model_weights=paths.final_model_full_path
+        )
 
     if mode == "CAS" or mode == "AL":
         update_image_list = cas.sample_alpl_sets(
@@ -697,11 +697,11 @@ def exp_0528_vanilla(
     )
 
     if train_from_init:
-        # d2_mask.train_vanilla_mrcnn(
-        #     output_folder="0528_vanilla/weights/init_model",
-        #     regist_instances=False,
-        #     cfg=config.get_cfg_for_vanilla(**setup.exp_0528_vanilla_model_init)
-        # )
+        d2_mask.train_vanilla_mrcnn(
+            output_folder="0528_vanilla/weights/init_model",
+            regist_instances=False,
+            cfg=config.get_cfg_for_vanilla(**setup.exp_0528_vanilla_model_init)
+        )
         d2_mask.get_coco_eval_results_vanilla(
             model_weights=paths.final_model_full_path,
             regist_instances=False,
@@ -767,46 +767,46 @@ def exp_0528_al(mode: str = "AL", iter: int = 10, train_from_init: bool = True):
         regist_instances=True, logfile=f"exp_0528_al_{datetime.now()}", cfg=None
     )
 
-    # if train_from_init:
-    #     d2_mask.train_model_only(
-    #         output_folder="0528_al/weights/init_model",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_al(**setup.exp_0528_al_model_init)
-    #     )
-    #     d2_mask.get_coco_eval_results_al(
-    #         model_weights=paths.final_model_full_path,
-    #         regist_instances=False,
-    #         output_path=f"./output/0528_al/init_model",
-    #         cfg=config.get_cfg_for_al(**setup.exp_0528_al_prediction),
-    #     )
-    #     d2_mask.train_scores_only(
-    #         output_folder="0528_al/weights/init_score",
-    #         regist_instances=False,
-    #         cfg=config.get_cfg_for_al(**setup.exp_0528_al_scores_init),
-    #         model_weights=paths.final_model_full_path
-    #     )
+    if train_from_init:
+        d2_mask.train_model_only(
+            output_folder="0528_al/weights/init_model",
+            regist_instances=False,
+            cfg=config.get_cfg_for_al(**setup.exp_0528_al_model_init)
+        )
+        d2_mask.get_coco_eval_results_al(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path=f"./output/0528_al/init_model",
+            cfg=config.get_cfg_for_al(**setup.exp_0528_al_prediction),
+        )
+        d2_mask.train_scores_only(
+            output_folder="0528_al/weights/init_score",
+            regist_instances=False,
+            cfg=config.get_cfg_for_al(**setup.exp_0528_al_scores_init),
+            model_weights=paths.final_model_full_path
+        )
 
-    # if mode == "CAS" or mode == "AL":
-    #     update_image_list = cas.sample_al_sets(
-    #         model_weights=paths.final_model_full_path,
-    #         regist_instances=False,
-    #         output_path="./output/0528_al/init_score",
-    #         test_anns_file="./data/annotations/A14_L2/test.json",
-    #         no_img=40,
-    #     )
-    # else:
-    #     update_image_list = cas.sample_rand_sets(
-    #         test_anns_file="./data/annotations/A14_L2/test.json",
-    #         no_img=40,
-    #     )
+    if mode == "CAS" or mode == "AL":
+        update_image_list = cas.sample_al_sets(
+            model_weights=paths.final_model_full_path,
+            regist_instances=False,
+            output_path="./output/0528_al/init_score",
+            test_anns_file="./data/annotations/A14_L2/test.json",
+            no_img=40,
+        )
+    else:
+        update_image_list = cas.sample_rand_sets(
+            test_anns_file="./data/annotations/A14_L2/test.json",
+            no_img=40,
+        )
 
-    # cas.transfer_labels(
-    #     train_anns_file="./data/annotations/A14_L2/train.json",
-    #     test_anns_file="./data/annotations/A14_L2/test.json",
-    #     image_list=update_image_list,
-    #     output_path="./output/0528_al/labels",
-    #     output_file_tag=0,
-    # )
+    cas.transfer_labels(
+        train_anns_file="./data/annotations/A14_L2/train.json",
+        test_anns_file="./data/annotations/A14_L2/test.json",
+        image_list=update_image_list,
+        output_path="./output/0528_al/labels",
+        output_file_tag=0,
+    )
 
     for it in range(iter):
         cas.register_new_labels(

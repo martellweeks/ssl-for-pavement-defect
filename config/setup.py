@@ -1,3 +1,5 @@
+# Experiments for AL testing in April
+
 initial_model = {
     "train_dataset": "train",
     "ims_per_batch": 5,
@@ -69,6 +71,8 @@ cycle_score = {
     "max_iter": 2000,
     "eval_period": 3000,
 }
+
+# Experiments for initial CNS testing in 0511
 
 cns_test = {
     "base_lr": 0.001,
